@@ -1,0 +1,394 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.background-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.star {
+  position: absolute;
+  font-size: 24px;
+  color: #e6e6fa;
+  animation: float 3s ease-in-out infinite;
+}
+
+.star-1 {
+  top: 10%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.star-2 {
+  top: 20%;
+  right: 20%;
+  animation-delay: 1s;
+}
+
+.cloud {
+  position: absolute;
+  font-size: 32px;
+  color: #e6e6fa;
+  animation: float 4s ease-in-out infinite;
+}
+
+.cloud-1 {
+  top: 15%;
+  left: 10%;
+  animation-delay: 0.5s;
+}
+
+.spiral {
+  position: absolute;
+  font-size: 20px;
+  color: #e6e6fa;
+  animation: rotate 8s linear infinite;
+}
+
+.spiral-1 {
+  bottom: 30%;
+  right: 15%;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.poap-container {
+  position: relative;
+  z-index: 2;
+  padding: 60px 20px 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.poap-circle {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 10px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.progress-ring {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 310px;
+  height: 310px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #ff6b6b 0deg 60deg,
+    #4ecdc4 60deg 120deg,
+    #45b7d1 120deg 180deg,
+    #f9ca24 180deg 240deg,
+    #f0932b 240deg 300deg,
+    #eb4d4b 300deg 360deg
+  );
+  z-index: 1;
+}
+
+.poap-content {
+  position: relative;
+  z-index: 3;
+  background: white;
+  border-radius: 50%;
+  width: 280px;
+  height: 280px;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.met-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #4a90e2;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.avatar-container {
+  margin: 15px 0;
+}
+
+.avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+
+.avatar-character {
+  font-size: 40px;
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  background: #2c3e50;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  text-align: center;
+}
+
+.name-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-top: 10px;
+}
+
+.attendance-count {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.attendance-count.left {
+  top: 50%;
+  left: -25px;
+  transform: translateY(-50%);
+}
+
+.attendance-count.right {
+  top: 50%;
+  right: -25px;
+  transform: translateY(-50%);
+}
+
+.main-content {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.main-content h1 {
+  font-size: 32px;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.date-info {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+.collect-section h2 {
+  font-size: 28px;
+  color: #7c4dff;
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.mint-form {
+  margin-bottom: 30px;
+}
+
+.email-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  margin-bottom: 20px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.email-input:focus {
+  border-color: #7c4dff;
+}
+
+.email-input::placeholder {
+  color: #b0b0b0;
+}
+
+.mint-button {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #7c4dff 0%, #651fff 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.3);
+}
+
+.mint-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(124, 77, 255, 0.4);
+}
+
+.mint-button:active {
+  transform: translateY(0);
+}
+
+.mint-info {
+  margin-top: 20px;
+}
+
+.gnosis-info {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.terms {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.link {
+  color: #7c4dff;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  position: relative;
+  z-index: 2;
+  margin-top: 60px;
+  padding: 40px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.poap-logo {
+  font-size: 18px;
+  font-weight: bold;
+  color: #7c4dff;
+  margin-bottom: 10px;
+}
+
+.copyright {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  color: #7c4dff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  color: #ccc;
+}
+
+@media (max-width: 768px) {
+  .main-content h1 {
+    font-size: 24px;
+  }
+  
+  .collect-section h2 {
+    font-size: 24px;
+  }
+  
+  .poap-circle {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .progress-ring {
+    width: 260px;
+    height: 260px;
+  }
+  
+  .poap-content {
+    width: 230px;
+    height: 230px;
+  }
+  
+  .attendance-count.left {
+    left: -20px;
+  }
+  
+  .attendance-count.right {
+    right: -20px;
+  }
+}
