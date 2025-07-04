@@ -1,6 +1,7 @@
 import { createConfig } from '@privy-io/wagmi';
 import { sepolia } from 'wagmi/chains';
 import { http } from 'wagmi';
+import { createPublicClient } from 'viem';
 
 export const config = createConfig({
   chains: [sepolia],
@@ -26,7 +27,7 @@ export const getViemClient = () => {
     chain: sepolia,
     transport: http(),
     batch: {
-      multicall: !!viemChain.contracts?.multicall3?.address
+      multicall: !!sepolia.contracts?.multicall3?.address
     }
   });
 
@@ -46,7 +47,7 @@ export const fetchEventsViem = async ({
       args: args,
     });
   } catch (error) {
-    logger.error("Onchain event fetch failed", error);
+    console.error("Onchain event fetch failed", error);
     throw error;
   }
 }
