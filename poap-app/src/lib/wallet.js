@@ -1,5 +1,5 @@
 import { createConfig } from '@privy-io/wagmi';
-import { sepolia } from 'viem/chains';
+import { sepolia } from 'wagmi/chains';
 import { http } from 'wagmi';
 
 export const config = createConfig({
