@@ -6,6 +6,8 @@ import Header from "./components/Header";
 import { sepolia } from 'wagmi/chains';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { config } from './lib/wallet';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 
 const queryClient = new QueryClient()
 
@@ -16,18 +18,22 @@ function App() {
         defaultChain: sepolia,
         supportedChains: [sepolia]
       }}
-
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
-          <div className="App">
-            <div className="app-wrapper">
-              <Header />
-              <PoapClaim />
+          <Router>
+            <div className="App">
+              <div className="app-wrapper">
+                <Header />
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/claim/:qrHash" element={<PoapClaim />} />
+                </Routes>
+              </div>
             </div>
-          </div>
+          </Router>
         </WagmiProvider>
-      </QueryClientProvider >
+      </QueryClientProvider>
     </Providers>
   );
 }
