@@ -36,5 +36,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://collectors.poap.xyz"
+  "devDependencies": {
+    "http-proxy-middleware": "^3.0.5"
+  }
 }
