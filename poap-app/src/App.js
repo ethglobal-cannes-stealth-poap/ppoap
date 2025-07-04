@@ -33,7 +33,11 @@ function App() {
             <div className="met-text">YOU'VE MET</div>
             <div className="avatar-container">
               <div className="avatar">
-                <div className="avatar-character">🧑‍💻</div>
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" 
+                  alt="Skas"
+                  className="avatar-image"
+                />
                 <div className="avatar-badge">ATF<br/>AGENT</div>
               </div>
             </div>
