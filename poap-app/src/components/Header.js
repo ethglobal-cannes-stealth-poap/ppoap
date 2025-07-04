@@ -5,15 +5,7 @@ export default function Header() {
   const { login } = useLogin();
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
-
-  const { logout } = useLogout({
-    onSuccess: () => {
-      console.log('User successfully logged out');
-    },
-    onError: (error) => {
-      console.error('Logout failed', error);
-    }
-  });
+  const { logout } = useLogout();
 
   const disableLogin = !ready || (ready && authenticated);
 
@@ -27,7 +19,7 @@ export default function Header() {
         <button className="wallet-connected" onClick={() => logout()} disabled={false}>
           <div className="wallet-indicator"></div>
           <span className="wallet-address">
-            {truncateAddress(wallets[0].address)}
+            {truncateAddress(wallets[0]?.address)}
           </span>
         </button>
       ) : (
