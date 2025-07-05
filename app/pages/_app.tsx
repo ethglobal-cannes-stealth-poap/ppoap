@@ -75,7 +75,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                 borderRadius: '12px',
                 padding: '16px 20px',
                 boxShadow: '0 4px 20px rgba(124, 77, 255, 0.2)',
-                lineHeight: '1.4'
+                lineHeight: '1.4',
+                zIndex: 10000
               },
               success: {
                 style: {
