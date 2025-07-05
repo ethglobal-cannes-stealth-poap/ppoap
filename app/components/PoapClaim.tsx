@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import MintResponse from "./MintResponse";
+import toast from "react-hot-toast";
+import { useWallets } from "@privy-io/react-auth";
+import { getMetaAddress } from "../utils/viewTransactions/getMetaAddress";
+import { setMetaAddress } from "../utils/writeTransactions/setMetaAddress";
 
 interface MintResponse {
   id: string;
@@ -22,6 +27,9 @@ interface PoapClaimProps {
 function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) {
   const [minting, setMinting] = useState(false);
   const [mintResponse, setMintResponse] = useState<MintResponse | null>(null);
+
+  const { wallets } = useWallets();
+  const wallet = wallets[0];
 
   const { data: poap, isLoading: isLoadingPoap } = useQuery({
     queryKey: ["poap", poapId],
@@ -72,6 +80,30 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
     },
   });
 
+  const { data: isInRegistry, isLoading: isCheckingRegistry } = useQuery({
+    queryKey: ["isRegistered", mintToAddress],
+    queryFn: async () => {
+      if (!mintToAddress) {
+        throw new Error("No mintToAddress provided");
+      }
+      if (!wallet) {
+        throw new Error("No wallet connected");
+      }
+
+      try {
+        const isRegistered = await getMetaAddress({ address: mintToAddress });
+        console.log("Is Meta address registered:", isRegistered);
+
+        return true;
+      } catch (err: any) {
+        console.log("Registry check error:", err.response?.data || err.message);
+        toast.error("Failed to check registry status");
+      }
+    },
+    enabled: !!mintToAddress && !!wallet,
+    staleTime: Infinity
+  });
+
   const performMint = async (address: string) => {
     try {
       const response = await axios.post(
@@ -88,10 +120,6 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
         }
       );
 
-      console.log(
-        "Mint API success response:",
-        JSON.stringify(response.data, null, 2)
-      );
       return response.data;
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
@@ -141,8 +169,6 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
           }
 
           const profileData = profileResponse.data;
-          console.log("ENS validation response:", profileData);
-
           targetAddress = profileData.address;
 
           if (!targetAddress) {
@@ -153,14 +179,7 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
           targetAddress = mintToAddress;
         }
 
-        console.log("Minting POAP:", {
-          address: targetAddress,
-          poapId,
-        });
-
         const mintResult = await performMint(targetAddress);
-        console.log("Final mint result:", JSON.stringify(mintResult, null, 2));
-
         setMintResponse(mintResult);
       } else {
         throw new Error("Please use an ENS domain or Ethereum address.");
@@ -281,37 +300,7 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
       </div>
 
       {mintResponse && (
-        <div className="mint-success">
-          <div className="success-header">
-            <div className="success-icon">✅</div>
-            <h3>POAP Minted Successfully!</h3>
-          </div>
-          <div className="success-details">
-            <p>
-              <strong>Mint ID:</strong> {mintResponse.id}
-            </p>
-            <p>
-              <strong>Beneficiary:</strong> {mintResponse.beneficiary}
-            </p>
-            <p>
-              <strong>Event:</strong> {mintResponse.event?.name}
-            </p>
-            <p>
-              <strong>Claimed:</strong> {mintResponse.claimed ? "Yes" : "No"}
-            </p>
-            {mintResponse.claimed_date && (
-              <p>
-                <strong>Claimed Date:</strong>{" "}
-                {new Date(mintResponse.claimed_date).toLocaleString()}
-              </p>
-            )}
-            {mintResponse.qr_hash && (
-              <p>
-                <strong>QR Hash:</strong> {mintResponse.qr_hash}
-              </p>
-            )}
-          </div>
-        </div>
+        <MintResponse mintResponse={mintResponse} />
       )}
     </>
   );

@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
-// import { useWallets } from "@privy-io/react-auth";
 import { generateStealthAddress } from "../utils/stealth-address";
 
 interface AnonAddressProps {
@@ -10,9 +9,6 @@ interface AnonAddressProps {
 }
 
 function AnonAddress({ mintToAddress, setMintToAddress }: AnonAddressProps) {
-  // const { wallets } = useWallets();
-  // const wallet = wallets[0];
-
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
       console.log("Generating stealth address...");
