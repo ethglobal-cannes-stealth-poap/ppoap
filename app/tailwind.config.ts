@@ -17,6 +17,10 @@ const config: Config = {
     },
   },
   plugins: [require('@tailwindcss/forms'), require('daisyui')],
+  daisyui: {
+    themes: ["light"],
+    darkTheme: "light",
+  },
 };
 
 export default config;

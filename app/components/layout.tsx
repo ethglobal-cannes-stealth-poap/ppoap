@@ -9,7 +9,7 @@ export default function Layout({
   children,
 }: Props) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" data-theme="light">
       <Header />
       <main className="flex-1 flex flex-col pt-20">
         {children}

@@ -13,6 +13,10 @@ const queryClient = new QueryClient();
 function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     window.Buffer = Buffer;
+    // Force light theme
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
   }, []);
 
   return (
