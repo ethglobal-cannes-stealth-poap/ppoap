@@ -1,10 +1,9 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import Layout from '../../components/layout';
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import confetti from 'canvas-confetti';
-import toast from 'react-hot-toast';
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import Layout from "../../components/layout";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 interface POAPDetails {
   tokenId: string;
@@ -33,76 +32,26 @@ export default function POAPPage() {
   const { tokenId, success } = router.query;
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const { data: poap, isLoading, error } = useQuery<POAPDetails>({
-    queryKey: ['poap', tokenId],
+  const {
+    data: poap,
+    isLoading,
+    error,
+  } = useQuery<POAPDetails>({
+    queryKey: ["poap", tokenId],
     queryFn: async () => {
-      if (!tokenId) throw new Error('No token ID provided');
-      
+      if (!tokenId) throw new Error("No token ID provided");
+
       const response = await axios.get(`/api/poap/token/${tokenId}`);
       return response.data;
     },
     enabled: !!tokenId,
   });
 
-  useEffect(() => {
-    if (success === 'true' && !showSuccess) {
-      setShowSuccess(true);
-      
-      // Show success toast
-      toast.success('POAP minted successfully!', {
-        duration: 5000,
-        style: {
-          background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
-          color: 'white',
-          border: '1px solid rgba(76, 175, 80, 0.3)',
-          boxShadow: '0 4px 20px rgba(76, 175, 80, 0.3)',
-          zIndex: 10000,
-        },
-      });
-
-      // Trigger confetti
-      const duration = 3 * 1000;
-      const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-      function randomInRange(min: number, max: number) {
-        return Math.random() * (max - min) + min;
-      }
-
-      const interval = setInterval(function() {
-        const timeLeft = animationEnd - Date.now();
-
-        if (timeLeft <= 0) {
-          return clearInterval(interval);
-        }
-
-        const particleCount = 50 * (timeLeft / duration);
-        
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-        });
-        
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-        });
-      }, 250);
-
-      // Clean up URL after showing success
-      setTimeout(() => {
-        router.replace(`/poap/${tokenId}`, undefined, { shallow: true });
-      }, 1000);
-    }
-  }, [success, showSuccess, tokenId, router]);
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -126,9 +75,11 @@ export default function POAPPage() {
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4">POAP Not Found</h2>
-            <p className="text-gray-600 mb-6">The POAP with token ID #{tokenId} could not be found.</p>
+            <p className="text-gray-600 mb-6">
+              The POAP with token ID #{tokenId} could not be found.
+            </p>
             <button
-              onClick={() => router.push('/gallery')}
+              onClick={() => router.push("/gallery")}
               className="btn btn-primary"
             >
               Back to Gallery
@@ -152,11 +103,13 @@ export default function POAPPage() {
           </figure>
           <div className="card-body lg:w-1/2">
             <div className="mb-4">
-              <div className="badge badge-secondary badge-lg">Token #{poap.tokenId}</div>
+              <div className="badge badge-secondary badge-lg">
+                Token #{poap.tokenId}
+              </div>
             </div>
-            
+
             <h2 className="card-title text-3xl mb-4">{poap.event.name}</h2>
-            
+
             {poap.event.description && (
               <p className="text-gray-600 mb-6">{poap.event.description}</p>
             )}
@@ -164,7 +117,9 @@ export default function POAPPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">Owner:</span>
-                <span className="font-mono text-sm">{formatAddress(poap.owner)}</span>
+                <span className="font-mono text-sm">
+                  {formatAddress(poap.owner)}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -175,7 +130,9 @@ export default function POAPPage() {
               {poap.event.city && poap.event.country && (
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">Location:</span>
-                  <span>{poap.event.city}, {poap.event.country}</span>
+                  <span>
+                    {poap.event.city}, {poap.event.country}
+                  </span>
                 </div>
               )}
 
@@ -207,7 +164,7 @@ export default function POAPPage() {
                 </a>
               )}
               <button
-                onClick={() => router.push('/gallery')}
+                onClick={() => router.push("/gallery")}
                 className="btn btn-primary"
               >
                 Back to Gallery

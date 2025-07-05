@@ -1,6 +1,5 @@
 import React from "react";
 import Header from "./header";
-import Footer from "./footer";
 
 type Props = {
   children: React.ReactNode;
@@ -15,7 +14,6 @@ export default function Layout({
       <main className="flex-1 flex flex-col pt-20">
         {children}
       </main>
-      <Footer />
     </div>
   );
 }
