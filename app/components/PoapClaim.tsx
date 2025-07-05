@@ -40,14 +40,13 @@ function PoapClaim({ poapId }: { poapId: string }) {
       }
 
       try {
-        const response = await axios.get(`https://collectors.poap.xyz/api/website/${poapId}/validate`, {
+        const response = await axios.get(`/api/poap/validate?poapId=${poapId}`, {
           headers: {
             Accept: "application/json",
           },
         });
 
         const data = response.data;
-        console.log("POAP Collectors API Response:", data);
 
         if (!data) {
           throw new Error("No data found in response");
@@ -77,14 +76,13 @@ function PoapClaim({ poapId }: { poapId: string }) {
 
   const performMint = async (address: string) => {
     try {
-      const response = await axios.post(`https://api.poap.tech/website/claim`, {
+      const response = await axios.post('/api/poap/mint', {
         website: poapId,
         address: address
       }, {
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-API-Key': process.env.NEXT_PUBLIC_POAP_API_KEY || ''
+          'Content-Type': 'application/json'
         }
       });
 
@@ -92,7 +90,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
       return response.data;
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
-      throw new Error(`Mint failed (${err.response?.status || 'Network Error'}): ${err.response?.data || err.message}`);
+      throw new Error(`Mint failed (${err.response?.status || 'Network Error'}): ${err.response?.data?.error || err.message}`);
     }
   };
 
@@ -131,13 +129,13 @@ function PoapClaim({ poapId }: { poapId: string }) {
 
       if (isEnsOrAddress) {
         if (isEns) {
-          const profileResponse = await fetch(`https://profiles.poap.tech/profile/${mintToWallet.trim()}`);
+          const profileResponse = await axios.get(`/api/poap/profile?ens=${mintToWallet.trim()}`);
 
-          if (!profileResponse.ok) {
+          if (profileResponse.status !== 200) {
             throw new Error("Invalid ENS domain or ENS not found");
           }
 
-          const profileData = await profileResponse.json();
+          const profileData = profileResponse.data;
           console.log("ENS validation response:", profileData);
 
           targetAddress = profileData.address;
@@ -153,8 +151,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
 
         console.log("Minting POAP:", {
           address: targetAddress,
-          poapId,
-          hasApiKey: !!process.env.NEXT_PUBLIC_POAP_API_KEY
+          poapId
         });
 
         const mintResult = await performMint(targetAddress);
