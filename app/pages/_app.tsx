@@ -81,43 +81,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                   boxShadow: '0 4px 20px rgba(124, 77, 255, 0.2)',
                   lineHeight: '1.4'
                 },
-                success: {
-                  style: {
-                    background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
-                    color: 'white',
-                    border: '1px solid rgba(76, 175, 80, 0.3)',
-                    boxShadow: '0 4px 20px rgba(76, 175, 80, 0.3)'
-                  },
-                  iconTheme: {
-                    primary: 'white',
-                    secondary: '#4caf50'
-                  }
-                },
-                error: {
-                  style: {
-                    background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
-                    color: 'white',
-                    border: '1px solid rgba(244, 67, 54, 0.3)',
-                    boxShadow: '0 4px 20px rgba(244, 67, 54, 0.3)'
-                  },
-                  iconTheme: {
-                    primary: 'white',
-                    secondary: '#f44336'
-                  }
-                },
-                loading: {
-                  style: {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    border: '1px solid rgba(102, 126, 234, 0.3)',
-                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)'
-                  },
-                  iconTheme: {
-                    primary: 'white',
-                    secondary: '#667eea'
-                  }
-                },
-                duration: 4000
+                duration: 3000
               }}
             />
             <Component {...pageProps} />

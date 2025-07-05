@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import MintResponse from "./MintResponse";
 import toast from "react-hot-toast";
@@ -80,6 +80,30 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
     },
   });
 
+  const { mutate: setMetaAddy, isPending: isSettingMetaAddress } = useMutation({
+    mutationFn: async (isInRegistry: boolean) => {
+      try {
+        if (!mintToAddress) {
+          throw new Error("No mintToAddress provided");
+        }
+        if (!wallet) {
+          throw new Error("No wallet connected");
+        }
+
+        if (isInRegistry === false) {
+          toast.error("This address is not registered in the Meta registry. Please register it first.");
+          const res = await setMetaAddress({ wallet, address: mintToAddress });
+          console.log("Meta address set successfully:", res);
+        }
+
+        toast.success("Meta address registered successfully!");
+      } catch (err: any) {
+        console.error("Error setting meta address:", err);
+        toast.error(`Failed to register meta address: ${err.message}`);
+      }
+    },
+  });
+
   const { data: isInRegistry, isLoading: isCheckingRegistry } = useQuery({
     queryKey: ["isRegistered", mintToAddress],
     queryFn: async () => {
@@ -93,6 +117,11 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
       try {
         const isRegistered = await getMetaAddress({ address: mintToAddress });
         console.log("Is Meta address registered:", isRegistered);
+
+        if (isRegistered === false) {
+          toast.error("This address is not registered in the Meta registry. Please register it first.");
+          setMetaAddy(isRegistered);
+        }
 
         return true;
       } catch (err: any) {
