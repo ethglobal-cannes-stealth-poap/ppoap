@@ -6,7 +6,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Adelle Sans', ...defaultTheme.fontFamily.sans],
+        sans: ['Inter', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         'privy-navy': '#160B45',

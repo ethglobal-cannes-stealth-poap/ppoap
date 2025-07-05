@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import { generateStealthAddress } from "../utils/stealth-address";
 
@@ -22,29 +22,34 @@ function PoapClaim({ poapId }: { poapId: string }) {
   const [getAnonAddress, setGetAnonAddress] = useState(false);
 
   const { data: stealthAddress } = useQuery({
-    queryKey: ['stealth-address'],
+    queryKey: ["stealth-address"],
     enabled: getAnonAddress,
     queryFn: async () => {
-      const data = await initializeStealthAddress() as any
+      const data = (await initializeStealthAddress()) as any;
 
-      const stealthAddress = await generateStealthAddress(data.stealthMetaAddress)
-      return stealthAddress.stealthAddress
-    }
-  })
+      const stealthAddress = await generateStealthAddress(
+        data.stealthMetaAddress
+      );
+      return stealthAddress.stealthAddress;
+    },
+  });
 
   const { data: poap, isLoading: isLoadingPoap } = useQuery({
-    queryKey: ['poap', poapId],
+    queryKey: ["poap", poapId],
     queryFn: async () => {
       if (!poapId) {
         throw new Error("No poapId provided");
       }
 
       try {
-        const response = await axios.get(`/api/poap/validate?poapId=${poapId}`, {
-          headers: {
-            Accept: "application/json",
-          },
-        });
+        const response = await axios.get(
+          `/api/poap/validate?poapId=${poapId}`,
+          {
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
 
         const data = response.data;
 
@@ -67,46 +72,61 @@ function PoapClaim({ poapId }: { poapId: string }) {
         return transformedData;
       } catch (err: any) {
         if (err.response?.status) {
-          throw new Error(`Invalid claim name: ${poapId} (${err.response.status})`);
+          throw new Error(
+            `Invalid claim name: ${poapId} (${err.response.status})`
+          );
         }
-        throw new Error(err.message || `Failed to fetch POAP data for: ${poapId}`);
+        throw new Error(
+          err.message || `Failed to fetch POAP data for: ${poapId}`
+        );
       }
     },
-  })
+  });
 
   const performMint = async (address: string) => {
     try {
-      const response = await axios.post('/api/poap/mint', {
-        poapId: poapId,
-        address: address
-      }, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+      const response = await axios.post(
+        "/api/poap/mint",
+        {
+          poapId: poapId,
+          address: address,
+        },
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
-      console.log("Mint API success response:", JSON.stringify(response.data, null, 2));
+      console.log(
+        "Mint API success response:",
+        JSON.stringify(response.data, null, 2)
+      );
       return response.data;
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
-      throw new Error(`Mint failed (${err.response?.status || 'Network Error'}): ${err.response?.data?.error || err.message}`);
+      throw new Error(
+        `Mint failed (${err.response?.status || "Network Error"}): ${
+          err.response?.data?.error || err.message
+        }`
+      );
     }
   };
 
   const handleGetAnonAddress = async () => {
     setGetAnonAddress(true);
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const reciever = stealthAddress
+    const reciever = stealthAddress;
 
-    const mintToWallet = reciever
+    const mintToWallet = reciever;
 
     if (!mintToWallet?.trim()) {
-      alert("Please enter an email, ENS or Ethereum address");
+      alert("Please enter an ENS or Ethereum address");
       return;
     }
 
@@ -114,7 +134,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
     setMintResponse(null);
 
     try {
-      const isEns = mintToWallet.includes('.eth');
+      const isEns = mintToWallet.includes(".eth");
       const isEthAddress = /^0x[a-fA-F0-9]{40}$/.test(mintToWallet.trim());
       const isEnsOrAddress = isEns || isEthAddress;
 
@@ -122,14 +142,16 @@ function PoapClaim({ poapId }: { poapId: string }) {
         input: mintToWallet.trim(),
         isEns,
         isEthAddress,
-        isEnsOrAddress
+        isEnsOrAddress,
       });
 
       let targetAddress = null;
 
       if (isEnsOrAddress) {
         if (isEns) {
-          const profileResponse = await axios.get(`/api/poap/profile?ens=${mintToWallet.trim()}`);
+          const profileResponse = await axios.get(
+            `/api/poap/profile?ens=${mintToWallet.trim()}`
+          );
 
           if (profileResponse.status !== 200) {
             throw new Error("Invalid ENS domain or ENS not found");
@@ -144,14 +166,13 @@ function PoapClaim({ poapId }: { poapId: string }) {
             throw new Error("No address found for the provided ENS");
           }
         } else {
-          console.log(stealthAddress)
+          console.log(stealthAddress);
           targetAddress = stealthAddress;
-
         }
 
         console.log("Minting POAP:", {
           address: targetAddress,
-          poapId
+          poapId,
         });
 
         const mintResult = await performMint(targetAddress);
@@ -161,7 +182,6 @@ function PoapClaim({ poapId }: { poapId: string }) {
       } else {
         throw new Error("Please use an ENS domain or Ethereum address.");
       }
-
     } catch (error: any) {
       console.error("Error minting POAP:", error);
       alert(`Error: ${error.message}`);
@@ -184,9 +204,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
       <div className="error-container">
         <div className="error-icon">❌</div>
         <h2>POAP Not Found</h2>
-        {poapId && (
-          <p className="error-details">Claim Name: {poapId}</p>
-        )}
+        {poapId && <p className="error-details">Claim Name: {poapId}</p>}
         <p className="how-to">
           Please provide a claim name in the URL: /claim/your-claim-name
         </p>
@@ -241,9 +259,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
               </div>
             </div>
             <div className="name-text">
-              {extractNameFromTitle(
-                poap?.name || poap?.description || ""
-              )}
+              {extractNameFromTitle(poap?.name || poap?.description || "")}
             </div>
           </div>
         </div>
@@ -252,46 +268,38 @@ function PoapClaim({ poapId }: { poapId: string }) {
       <div className="main-content">
         <h1>{poap?.name || poap?.description || "POAP Event"}</h1>
         <div className="date-info">
-          📅{" "}
-          {poap?.start_date ? formatDate(poap.start_date) : "Date TBD"}
+          📅 {poap?.start_date ? formatDate(poap.start_date) : "Date TBD"}
           {poap?.end_date && poap.end_date !== poap.start_date
             ? ` - ${formatDate(poap.end_date)}`
             : ""}
         </div>
 
         <div className="collect-section">
-          <h2>Collect this POAP</h2>
           <form onSubmit={handleSubmit} className="mint-form">
-
-            <button type="button" className="mint-button" onClick={handleGetAnonAddress}>
+            <button
+              type="button"
+              className="mint-button"
+              onClick={handleGetAnonAddress}
+            >
               Get Anon Address
             </button>
 
             <input
               type="text"
-              placeholder="Email, ENS or Ethereum address"
+              placeholder="ENS or Ethereum address"
               value={stealthAddress}
               disabled={true}
               // onChange={(e) => setMintToWallet(e.target.value)}
-              className="email-input"
+              className="address-input"
             />
-            <button type="submit" className="mint-button" disabled={minting}>
+            <button
+              type="submit"
+              className="mint-button"
+              disabled={minting || !stealthAddress?.trim()}
+            >
               {minting ? "Minting..." : "Mint now"}
             </button>
           </form>
-
-          <div className="mint-info">
-            <div className="terms">
-              By minting this POAP, you accept POAP Inc's{" "}
-              <a href="#" className="link">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="link">
-                Privacy Policy
-              </a>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -302,15 +310,28 @@ function PoapClaim({ poapId }: { poapId: string }) {
             <h3>POAP Minted Successfully!</h3>
           </div>
           <div className="success-details">
-            <p><strong>Mint ID:</strong> {mintResponse.id}</p>
-            <p><strong>Beneficiary:</strong> {mintResponse.beneficiary}</p>
-            <p><strong>Event:</strong> {mintResponse.event?.name}</p>
-            <p><strong>Claimed:</strong> {mintResponse.claimed ? 'Yes' : 'No'}</p>
+            <p>
+              <strong>Mint ID:</strong> {mintResponse.id}
+            </p>
+            <p>
+              <strong>Beneficiary:</strong> {mintResponse.beneficiary}
+            </p>
+            <p>
+              <strong>Event:</strong> {mintResponse.event?.name}
+            </p>
+            <p>
+              <strong>Claimed:</strong> {mintResponse.claimed ? "Yes" : "No"}
+            </p>
             {mintResponse.claimed_date && (
-              <p><strong>Claimed Date:</strong> {new Date(mintResponse.claimed_date).toLocaleString()}</p>
+              <p>
+                <strong>Claimed Date:</strong>{" "}
+                {new Date(mintResponse.claimed_date).toLocaleString()}
+              </p>
             )}
             {mintResponse.qr_hash && (
-              <p><strong>QR Hash:</strong> {mintResponse.qr_hash}</p>
+              <p>
+                <strong>QR Hash:</strong> {mintResponse.qr_hash}
+              </p>
             )}
           </div>
         </div>

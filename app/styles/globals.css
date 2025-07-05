@@ -1,26 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@layer base {
-  /* normal */
-  @font-face {
-    font-family: "Adelle Sans";
-    src: url("/fonts/AdelleSans-Regular.woff2") format("woff2");
-    font-style: normal;
-    font-display: swap;
-    font-weight: 300;
-  }
-
-  /* semibold */
-  @font-face {
-    font-family: "Adelle Sans";
-    src: url("/fonts/AdelleSans-Semibold.woff2") format("woff2");
-    font-style: normal;
-    font-display: swap;
-    font-weight: 600;
-  }
-}
 
 * {
   margin: 0;
@@ -29,12 +11,12 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: white;
   min-height: 100vh;
   margin: 0;
   padding: 0;
@@ -47,7 +29,7 @@ body {
   overflow-x: hidden;
   max-width: 393px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: white;
 }
 
 .app-wrapper {
@@ -59,27 +41,26 @@ body {
 }
 
 .header {
-  position: relative;
-  z-index: 2;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
   padding: 1rem 2rem;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.9);
+  width: 100vw;
+  background: #ff7f00;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(196, 207, 226, 0.3);
-  color: #2c3e50;
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 127, 0, 0.3);
+  color: white;
 }
 
 .header-title {
   font-size: 1.5rem;
   font-weight: bold;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: white;
 }
 
 .wallet-connected {
@@ -109,20 +90,20 @@ body {
 
 .connect-wallet-button {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  background: #ff7f00;
+  color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 127, 0, 0.3);
 }
 
 .connect-wallet-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(255, 127, 0, 0.4);
 }
 
 .background-elements {
@@ -356,7 +337,11 @@ body {
   margin-bottom: 25px;
 }
 
-.email-input {
+.mint-form button[type="button"] {
+  margin-bottom: 16px;
+}
+
+.address-input {
   width: 100%;
   max-width: 100%;
   padding: 14px 16px;
@@ -369,11 +354,11 @@ body {
   box-sizing: border-box;
 }
 
-.email-input:focus {
+.address-input:focus {
   border-color: #7c4dff;
 }
 
-.email-input::placeholder {
+.address-input::placeholder {
   color: #b0b0b0;
 }
 
@@ -381,7 +366,7 @@ body {
   width: 100%;
   max-width: 100%;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #7c4dff 0%, #651fff 100%);
+  background: #ff7f00;
   border: none;
   border-radius: 12px;
   color: white;
@@ -389,13 +374,13 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(255, 127, 0, 0.3);
   box-sizing: border-box;
 }
 
 .mint-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(124, 77, 255, 0.4);
+  box-shadow: 0 6px 25px rgba(255, 127, 0, 0.4);
 }
 
 .mint-button:active {
@@ -431,16 +416,16 @@ body {
 .footer {
   position: relative;
   z-index: 2;
-  margin-top: 40px;
-  padding: 30px 20px;
+  padding: 15px 20px;
   border-top: 1px solid #e0e0e0;
-  background: rgba(255, 255, 255, 0.9);
+  background: white;
+  text-align: center;
 }
 
 .poap-logo {
   font-size: 16px;
   font-weight: bold;
-  color: #7c4dff;
+  color: #ff7f00;
   margin-bottom: 8px;
 }
 
@@ -459,7 +444,7 @@ body {
 }
 
 .footer-link {
-  color: #7c4dff;
+  color: #ff7f00;
   text-decoration: none;
   font-size: 12px;
 }
@@ -487,7 +472,7 @@ body {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #7c4dff;
+  border-top: 4px solid #ff7f00;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -530,7 +515,7 @@ body {
 }
 
 .how-to {
-  color: #7c4dff;
+  color: #ff7f00;
   font-size: 14px;
   margin-top: 20px;
   font-weight: 500;
@@ -581,4 +566,3 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
-

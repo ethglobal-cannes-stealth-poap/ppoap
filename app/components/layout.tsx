@@ -13,12 +13,12 @@ export default function Layout({
   // const router = useRouter();
 
   return (
-    <div className="App">
-      <div className="app-wrapper">
-        <Header />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
-        <Footer />
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 flex flex-col pt-20">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 }
