@@ -3,6 +3,8 @@
 // Based on https://github.com/nerolation/stealth-utils and https://eips.ethereum.org/EIPS/eip-5564
 // Generates deterministic spending and viewing keys from passkey signatures
 
+import * as secp from '@noble/secp256k1';
+
 const CREDENTIAL_STORAGE_KEY = 'ppoap-webauthn-credentials';
 const STATIC_MESSAGE = 'cannes-love-poap';
 
@@ -239,7 +241,7 @@ export const initializeStealthAddress = async () => {
  * @param {string} staticMessage - The static message used for signing
  * @returns {Object} - Object containing spending and viewing keys
  */
-async function deriveStealthKeys(signature, staticMessage) {
+export const deriveStealthKeys = async (signature, staticMessage) => {
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
     signature,
@@ -272,56 +274,53 @@ async function deriveStealthKeys(signature, staticMessage) {
     256 // 32 bytes
   );
 
+  // Ensure private keys are valid secp256k1 private keys
+  const spendingKey = await normalizePrivateKey(new Uint8Array(spendingKeyMaterial));
+  const viewingKey = await normalizePrivateKey(new Uint8Array(viewingKeyMaterial));
+
   return {
-    spendingKey: new Uint8Array(spendingKeyMaterial),
-    viewingKey: new Uint8Array(viewingKeyMaterial),
+    spendingKey,
+    viewingKey,
   };
 }
 
 /**
- * Generate compressed public key from private key
- * Simulates secp256k1 operations using available browser crypto
+ * Normalize private key to ensure it's a valid secp256k1 private key
+ * @param {Uint8Array} keyMaterial - Raw key material
+ * @returns {Promise<Uint8Array>} - Valid secp256k1 private key
+ */
+async function normalizePrivateKey(keyMaterial) {
+  // Ensure the key is exactly 32 bytes
+  if (keyMaterial.length !== 32) {
+    throw new Error('Private key must be exactly 32 bytes');
+  }
+
+  // Use secp256k1 library to validate the private key
+  try {
+    // Try to generate a public key - this will throw if the private key is invalid
+    secp.getPublicKey(keyMaterial, true);
+    return keyMaterial;
+  } catch (error) {
+    // If key is invalid, hash it until we get a valid one
+    const hashedKey = await crypto.subtle.digest('SHA-256', keyMaterial);
+    return normalizePrivateKey(new Uint8Array(hashedKey));
+  }
+}
+
+/**
+ * Generate compressed public key from private key using secp256k1
  * @param {Uint8Array} privateKey - The private key
  * @returns {string} - The compressed public key in hex format
  */
 async function getCompressedPublicKey(privateKey) {
   try {
-    // Generate deterministic public key directly from private key bytes
-    const publicKeyBytes = await derivePublicKeyFromPrivate(privateKey);
-    return `0x${arrayToHex(publicKeyBytes)}`;
+    // Use noble/secp256k1 to generate the public key
+    const publicKey = secp.getPublicKey(privateKey, true); // true for compressed format
+    return `0x${arrayToHex(publicKey)}`;
   } catch (error) {
     console.error('Error generating compressed public key:', error);
     throw error;
   }
-}
-
-/**
- * Derive public key from private key using deterministic hashing
- * This is a simplified approach for demo purposes
- * In production, use proper secp256k1 curve operations
- * @param {Uint8Array} privateKey - The private key
- * @returns {Uint8Array} - The compressed public key bytes
- */
-async function derivePublicKeyFromPrivate(privateKey) {
-  let hash = await crypto.subtle.digest('SHA-256', privateKey);
-  
-  const entropy = await crypto.subtle.digest('SHA-256', 
-    new Uint8Array([...privateKey, ...new Uint8Array(hash)])
-  );
-  
-  const combinedHash = await crypto.subtle.digest('SHA-256', 
-    new Uint8Array([...new Uint8Array(hash), ...new Uint8Array(entropy)])
-  );
-  
-  const hashArray = new Uint8Array(combinedHash);
-  
-  const compressedPubKey = new Uint8Array(33);
-  
-  compressedPubKey[0] = (hashArray[0] % 2) === 0 ? 0x02 : 0x03;
-  
-  compressedPubKey.set(hashArray.slice(0, 32), 1);
-  
-  return compressedPubKey;
 }
 
 /**
@@ -383,7 +382,7 @@ export const runDemo = async () => {
   console.log('2. Create credentials if needed (ES256 - ECDSA P-256)');
   console.log('3. Sign the static message "cannes-love-poap"');
   console.log('4. Derive spending and viewing keys using HKDF');
-  console.log('5. Generate compressed public keys (33 bytes each)');
+  console.log('5. Generate compressed public keys using secp256k1 (33 bytes each)');
   console.log('6. Generate view tag for efficient parsing');
   console.log('7. Format the stealth meta-address according to EIP-5564');
   console.log('');

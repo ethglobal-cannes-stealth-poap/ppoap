@@ -3,22 +3,26 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
 import { initializeStealthAddress } from "../utils/pass-keys";
+import { generateStealthAddress } from "../utils/stealth-address";
 
 function PoapClaim() {
-  const [mintToWallet, setMintToWallet] = useState("");
+  // const [mintToWallet, setMintToWallet] = useState("");
   const [minting, setMinting] = useState(false);
   const [mintResponse, setMintResponse] = useState(null);
+
+  const [getAnonAddress, setGetAnonAddress] = useState(false);
 
   const params = useParams();
   const poapId = params.id;
 
-  const { data: stealthAddress, isLoading: isLoadingStealthAddress } = useQuery({
+  const { data: stealthAddress } = useQuery({
     queryKey: ['stealth-address'],
+    enabled: getAnonAddress,
     queryFn: async () => {
       const data = await initializeStealthAddress()
-      console.log(data)
-      debugger
-      return data
+
+      const stealthAddress = await generateStealthAddress(data.stealthMetaAddress)
+      return stealthAddress.stealthAddress
     }
   })
 
@@ -87,8 +91,16 @@ function PoapClaim() {
     }
   };
 
+  const handleGetAnonAddress = async () => {
+    setGetAnonAddress(true);
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const reciever = stealthAddress
+
+    const mintToWallet = reciever
 
     if (!mintToWallet.trim()) {
       alert("Please enter an email, ENS or Ethereum address");
@@ -124,16 +136,14 @@ function PoapClaim() {
           console.log("ENS validation response:", profileData);
 
           targetAddress = profileData.address;
-          debugger
 
           if (!targetAddress) {
             throw new Error("No address found for the provided ENS");
           }
         } else {
-          console.log(stealthAddress.data)
-          targetAddress = stealthAddress.data.stealthMetaAddress;
+          console.log(stealthAddress)
+          targetAddress = stealthAddress;
 
-          debugger
         }
 
         console.log("Minting POAP:", {
@@ -255,11 +265,17 @@ function PoapClaim() {
         <div className="collect-section">
           <h2>Collect this POAP</h2>
           <form onSubmit={handleSubmit} className="mint-form">
+
+            <button type="button" className="mint-button" onClick={handleGetAnonAddress}>
+              Get Anon Address
+            </button>
+
             <input
               type="text"
               placeholder="Email, ENS or Ethereum address"
-              value={mintToWallet}
-              onChange={(e) => setMintToWallet(e.target.value)}
+              value={stealthAddress?.data}
+              disabled={true}
+              // onChange={(e) => setMintToWallet(e.target.value)}
               className="email-input"
             />
             <button type="submit" className="mint-button" disabled={minting}>

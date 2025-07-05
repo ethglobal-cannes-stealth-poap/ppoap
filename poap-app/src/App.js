@@ -9,6 +9,9 @@ import { WagmiProvider } from '@privy-io/wagmi';
 import { config } from './lib/wallet';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
+import { Buffer } from 'buffer';
+
+window.Buffer = Buffer;
 
 const queryClient = new QueryClient()
 
