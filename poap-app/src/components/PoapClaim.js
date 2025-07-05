@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
+import { initializeStealthAddress } from "../utils/pass-keys";
 
 function PoapClaim() {
   const [mintToWallet, setMintToWallet] = useState("");
@@ -11,6 +12,16 @@ function PoapClaim() {
   const params = useParams();
   const poapId = params.id;
 
+  const { data: stealthAddress, isLoading: isLoadingStealthAddress } = useQuery({
+    queryKey: ['stealth-address'],
+    queryFn: async () => {
+      const data = await initializeStealthAddress()
+      console.log(data)
+      debugger
+      return data
+    }
+  })
+
   const { data: poap, isLoading: isLoadingPoap } = useQuery({
     queryKey: ['poap', poapId],
     queryFn: async () => {
@@ -19,7 +30,6 @@ function PoapClaim() {
       }
 
       try {
-        // Use axios instead of fetch
         const response = await axios.get(`/api/collectors/api/website/${poapId}/validate`, {
           headers: {
             Accept: "application/json",
@@ -29,7 +39,6 @@ function PoapClaim() {
         const data = response.data;
         console.log("POAP Collectors API Response:", data);
 
-        // The response should have event data
         if (!data) {
           throw new Error("No data found in response");
         }
@@ -90,7 +99,6 @@ function PoapClaim() {
     setMintResponse(null);
 
     try {
-      // Check if the input looks like an ENS domain or Ethereum address
       const isEns = mintToWallet.includes('.eth');
       const isEthAddress = /^0x[a-fA-F0-9]{40}$/.test(mintToWallet.trim());
       const isEnsOrAddress = isEns || isEthAddress;
@@ -106,7 +114,6 @@ function PoapClaim() {
 
       if (isEnsOrAddress) {
         if (isEns) {
-          // For ENS domains, resolve to address using POAP profiles API
           const profileResponse = await fetch(`/api/profiles/profile/${mintToWallet.trim()}`);
 
           if (!profileResponse.ok) {
@@ -117,13 +124,16 @@ function PoapClaim() {
           console.log("ENS validation response:", profileData);
 
           targetAddress = profileData.address;
+          debugger
 
           if (!targetAddress) {
             throw new Error("No address found for the provided ENS");
           }
         } else {
-          // For Ethereum addresses, use directly
-          targetAddress = mintToWallet.trim();
+          console.log(stealthAddress.data)
+          targetAddress = stealthAddress.data.stealthMetaAddress;
+
+          debugger
         }
 
         console.log("Minting POAP:", {
