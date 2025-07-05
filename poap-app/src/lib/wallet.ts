@@ -12,12 +12,12 @@ if (!ALCHEMY_RPC_URL) {
 
 export const CHAIN_ID = sepolia.id;
 
-export const config = createConfig({
-  chains: [sepolia],
-  transports: {
-    [sepolia.id]: [http(ALCHEMY_RPC_URL), http()],
-  },
-});
+// export const config = createConfig({
+//   chains: [sepolia],
+//   transports: {
+//     [sepolia.id]: [http(ALCHEMY_RPC_URL), http()],
+//   },
+// });
 
 export const getViemClient = (wallet: string) => {
   // const provider = await wallet.getEthereumProvider();
