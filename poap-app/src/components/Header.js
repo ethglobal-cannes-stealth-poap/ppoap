@@ -1,5 +1,5 @@
 import { usePrivy, useLogin, useLogout, useWallets } from '@privy-io/react-auth';
-import { truncateAddress } from '../utils/formt';
+import { truncateAddress } from '../utils/format';
 
 export default function Header() {
   const { login } = useLogin();

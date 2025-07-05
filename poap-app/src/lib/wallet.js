@@ -3,24 +3,22 @@ import { sepolia } from 'wagmi/chains';
 import { http } from 'wagmi';
 import { createPublicClient } from 'viem';
 
+const ALCHEMY_RPC_URL = process.env.REACT_APP_ALCHEMY_RPC_URL;
+if (!ALCHEMY_RPC_URL) {
+  throw new Error("REACT_APP_ALCHEMY_RPC_URL is not defined. Please set it in your .env file.");
+}
+
+export const CHAIN_ID = sepolia.id;
+
 export const config = createConfig({
   chains: [sepolia],
   transports: {
-    [sepolia.id]: http(),
+    [sepolia.id]: [
+      http(ALCHEMY_RPC_URL),
+      http()
+    ],
   },
 });
-
-/* 
-
- How to use this in your code:
- 
-  fetchEventsViem({
-    client: client,
-    address: contractAddress,
-    event: stakedEvent,
-  })
-
-*/
 
 export const getViemClient = () => {
   const client = createPublicClient({
