@@ -77,7 +77,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
   const performMint = async (address: string) => {
     try {
       const response = await axios.post('/api/poap/mint', {
-        website: poapId,
+        poapId: poapId,
         address: address
       }, {
         headers: {

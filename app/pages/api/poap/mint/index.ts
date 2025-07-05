@@ -1,21 +1,37 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
 
-export default async function POST(request: NextRequest) {
+type Data = {
+  data?: any;
+  error?: any;
+  status?: number;
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
-    const { poapId, address } = await request.json();
+    console.log("in the post request");
+    const { poapId, address } = req.body;
 
     if (!poapId || !address) {
-      return NextResponse.json(
-        { error: "Missing required fields: website and address" },
-        { status: 400 }
-      );
+      return res.status(400).json({
+        error: "Missing required fields: poapId and address",
+      });
     }
-
+    console.log("pARAMS: ", {
+      website: poapId,
+      address,
+    });
     const response = await axios.post(
       "https://api.poap.tech/website/claim",
       {
-        poapId,
+        website: poapId,
         address,
       },
       {
@@ -27,19 +43,16 @@ export default async function POST(request: NextRequest) {
       }
     );
 
-    return NextResponse.json(response.data);
+    return res.status(200).json(response.data);
   } catch (error: any) {
     console.error(
       "POAP mint API error:",
       error.response?.data || error.message
     );
 
-    return NextResponse.json(
-      {
-        error: `Mint failed: ${error.response?.data?.message || error.message}`,
-        status: error.response?.status || 500,
-      },
-      { status: error.response?.status || 500 }
-    );
+    return res.status(error.response?.status || 500).json({
+      error: `Mint failed: ${error.response?.data?.message || error.message}`,
+      status: error.response?.status || 500,
+    });
   }
 }
