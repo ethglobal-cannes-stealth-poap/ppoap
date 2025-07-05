@@ -1,4 +1,30 @@
-export const mintingContent = (poap: any) => {
+export const mintingContent = (
+  poap: any,
+  isLoadingPoap: boolean,
+  poapId: string
+) => {
+  if (isLoadingPoap) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading POAP...</p>
+      </div>
+    );
+  }
+
+  if (!isLoadingPoap && !poap) {
+    return (
+      <div className="error-container">
+        <div className="error-icon">❌</div>
+        <h2>POAP Not Found</h2>
+        {poapId && <p className="error-details">Claim Name: {poapId}</p>}
+        <p className="how-to">
+          Please provide a claim name in the URL: /claim/your-claim-name
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="background-elements">

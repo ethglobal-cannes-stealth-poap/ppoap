@@ -11,6 +11,7 @@ import { ANNOUNCE_CONTRACT_ADDRESS } from "../constants/contracts";
 import Contract5564 from "../constants/abi/5564.json";
 import { authenticateAndGenerateStealthAddress } from "../utils/pass-keys";
 import { mintingContent } from "./content";
+import { performMint } from "../utils/minting";
 
 const schemaId = 1;
 
@@ -196,33 +197,6 @@ function PoapClaim({
     });
   };
 
-  const performMint = async (address: string) => {
-    try {
-      const response = await axios.post(
-        "/api/poap/mint",
-        {
-          poapId: poapId,
-          address: address,
-        },
-        {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      return response.data;
-    } catch (err: any) {
-      console.log("Mint API error:", err.response?.data || err.message);
-      throw new Error(
-        `Mint failed (${err.response?.status || "Network Error"}): ${
-          err.response?.data?.error || err.message
-        }`
-      );
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -272,7 +246,7 @@ function PoapClaim({
         }
 
         // Mint to the target address
-        const mintResult = await performMint(targetAddress);
+        const mintResult = await performMint(poapId, targetAddress);
         setMintResponse(mintResult);
         alert("Minted successfully!");
         return;
@@ -287,28 +261,6 @@ function PoapClaim({
     }
   };
 
-  if (isLoadingPoap) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading POAP...</p>
-      </div>
-    );
-  }
-
-  if (!isLoadingPoap && !poap) {
-    return (
-      <div className="error-container">
-        <div className="error-icon">❌</div>
-        <h2>POAP Not Found</h2>
-        {poapId && <p className="error-details">Claim Name: {poapId}</p>}
-        <p className="how-to">
-          Please provide a claim name in the URL: /claim/your-claim-name
-        </p>
-      </div>
-    );
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
@@ -321,7 +273,7 @@ function PoapClaim({
 
   return (
     <>
-      {mintingContent(poap)}
+      {mintingContent(poap, isLoadingPoap, poapId)}
       <div className="main-content">
         <h1>{poap?.name || poap?.description || "POAP Event"}</h1>
         <div className="date-info">
