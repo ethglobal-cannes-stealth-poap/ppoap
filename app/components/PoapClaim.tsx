@@ -370,20 +370,19 @@ function PoapClaim({
               className="address-input"
             />
 
-
-
-            {isInRegistry && (
+            
+            {isInRegistry ? <>
               <p className="claim-page__all-good">
                 Your meta-stealth address is set up. You are all good to go!
               </p>
-            )}
+            </> : ' '}
 
             {
               !isInRegistry && (
                 <>
                   <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
 
-                  <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddress(true)}>Sound great</button>
+                  <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddress()}>Sound great</button>
                 </>
               )
             }
