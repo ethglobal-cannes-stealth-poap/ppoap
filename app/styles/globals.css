@@ -13,7 +13,7 @@
   :root {
     color-scheme: light;
   }
-  
+
   html {
     background: white !important;
   }
@@ -802,19 +802,6 @@ body {
   font-weight: 500;
 }
 
-
-.claim-page__register-button {
-  background: #ff7f00;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 10px 20px;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-
 .claim-page__all-good {
   color: black;
   font-size: 14px;
@@ -827,17 +814,4 @@ body {
   font-size: 14px;
   margin-bottom: 10px;
   font-weight: 500;
-}
-
-
-.claim-page__register-button {
-  background: #ff7f00;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 10px 20px;
-  margin-bottom: 10px;
-  cursor: pointer;
 }
