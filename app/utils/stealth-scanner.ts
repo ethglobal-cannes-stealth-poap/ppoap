@@ -54,7 +54,7 @@ const client = createClient({
 
     headers: {
 
-      Authorization: 'Bearer 5da881b6307862778780ce5f8f167a0b',
+      Authorization: 'Bearer dda69902abbe4922d3c01f9278ca713d',
 
     },
 
@@ -69,11 +69,11 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
 
   const AnnouncementsQuery = `
     query GetAnnouncements {
-      announcements(first: 100, where: {schemeId: "1"}) {
+      announcements(first: 5) {
         id
+        schemeId
         stealthAddress
         ephemeralPubKey
-        caller
         metadata
       }
     }
