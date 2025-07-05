@@ -235,7 +235,8 @@ export const initializeStealthAddress = async (): Promise<StealthAddressResult> 
     }
     
     // Generate stealth address using existing credentials
-    return await authenticateAndGenerateStealthAddress();
+    const v = await authenticateAndGenerateStealthAddress();
+    return v
   } catch (error) {
     console.error('Error initializing stealth address:', error);
     throw error;

@@ -26,39 +26,75 @@ const hexToBytes = (hex) => {
   return bytes;
 };
 
-// Function to check if a single stealth address belongs to the user
-function checkStealthAddressOwnership(ephemeralPubKey: string, viewingPrivateKeyBytes: Uint8Array, spendingPublicKey: string, targetStealthAddress: string) {
-  // Validate the format of the ephemeral public key from The Graph
-  if (typeof ephemeralPubKey !== 'string' || ephemeralPubKey.length !== 68 || !(ephemeralPubKey.startsWith('0x02') || ephemeralPubKey.startsWith('0x03'))) {
-    return false;
-  }
+function parseStealthAddresses(
+  ephemeralPublicKey_hex: string,
+  stealthAddress_given: string,
+  spendingPublicKey_hex: string,
+  viewingPrivateKey: string,
+  viewTag_given: string
+){
+  console.log("ephemeralPublicKey_hex :",ephemeralPublicKey_hex);
 
+  // Fix 1: Handle ephemeral public key properly
+  // The ephemeralPublicKey might be missing compression prefix or be uncompressed
+  let ephemeralPublicKey;
   try {
-    // Compute the shared secret: s = ephemeralPubKey * viewingPrivateKey
-    const sharedSecret = secp.getSharedSecret(viewingPrivateKeyBytes, ephemeralPubKey.slice(2));
+    // Try parsing as-is first
+    ephemeralPublicKey = secp.Point.fromHex(ephemeralPublicKey_hex.slice(2));
+  } catch (e) {
+    // If that fails, try with compression prefix (assume even y-coordinate)
+    try {
+      ephemeralPublicKey = secp.Point.fromHex('02' + ephemeralPublicKey_hex.slice(2));
+    } catch (e2) {
+      // If still fails, try with odd y-coordinate
+      try {
+        ephemeralPublicKey = secp.Point.fromHex('03' + ephemeralPublicKey_hex.slice(2));
+      } catch (e3) {
+        console.error('Failed to parse ephemeralPublicKey:', ephemeralPublicKey_hex, e3);
+        return false;
+      }
+    }
+  }
+  console.log('ephemeralPublicKey_hex:', ephemeralPublicKey_hex);
 
-    // Hash the shared secret: h = H(s)
-    const hashedSharedSecret = keccak256(sharedSecret.slice(1));
+  const spendingPublicKey = secp.Point.fromHex(spendingPublicKey_hex.slice(2));
+  console.log('spendingPublicKey:', spendingPublicKey);
 
-    // Compute the stealth public key: P_stealth = P_spend + H(s)G
-    const hashedSharedSecretPoint = secp.Point.fromPrivateKey(hashedSharedSecret.slice(2));
-    const spendingPublicKeyPoint = secp.Point.fromHex(spendingPublicKey);
-    const computedStealthPublicKey = spendingPublicKeyPoint.add(hashedSharedSecretPoint);
 
-    // Convert the computed public key to an address
-    const computedStealthAddress = toEthAddress(computedStealthPublicKey.toHex());
+  const sharedSecret = secp.getSharedSecret(BigInt(viewingPrivateKey), ephemeralPublicKey);
+  console.log('sharedSecret:', sharedSecret);
 
-    // Compare with the address from the announcement
-    return computedStealthAddress.toLowerCase() === targetStealthAddress.toLowerCase();
+  var hashedSharedSecret = keccak256(Buffer.from(sharedSecret.slice(2)));
+  console.log("hashedSharedSecret2 :",hashedSharedSecret);
 
-  } catch (error) {
-    // Catch errors if the ephemeralPubKey is not a valid point on the curve.
-    console.warn(`Could not process ephemeralPubKey: ${ephemeralPubKey}. It is likely an invalid curve point. Skipping.`);
+  var ViewTag = hashedSharedSecret.slice(0,2).toString();
+  console.log('View tag:', ViewTag);
+  console.log('View tag given:', viewTag_given);
+  if (viewTag_given != ViewTag) {
+    console.log("skipped thanks to view tag;")
     return false;
   }
+
+  // Fix 3: Remove 0x prefix before creating Buffer
+  const hashedSharedSecretPoint = secp.Point.fromPrivateKey(
+    Buffer.from(hashedSharedSecret.slice(2), "hex")
+  );
+  console.log('hashedSharedSecretPoint1:', hashedSharedSecretPoint);
+
+  const stealthPublicKey = spendingPublicKey.add(hashedSharedSecretPoint);
+  console.log("stealthPublicKey :",stealthPublicKey.toHex());
+
+  const stealthAddress = toEthAddress(stealthPublicKey.toHex());
+  console.log(stealthAddress);
+  console.log(stealthAddress_given);
+  if (stealthAddress === stealthAddress_given) {
+    return [stealthAddress, ephemeralPublicKey_hex,  "0x" + hashedSharedSecret.toString()];
+  }
+  return false;
 }
 
-const GRAPH_URL = 'https://api.studio.thegraph.com/query/115552/correct-contract/version/latest';
+// const GRAPH_URL = 'https://gateway.thegraph.com/api/subgraphs/id/AVHQeKhBop1z4YFgx78hR6wsBJFcjRr2FrxHsKxqaN5Q';
+const GRAPH_URL = 'https://api.studio.thegraph.com/query/115552/correct-contract/version/latest'
 const client = createClient({
   url: GRAPH_URL,
   fetchOptions: {
@@ -97,85 +133,27 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
       continue;
     }
 
-    const isForUser = checkStealthAddress({
-      ephemeralPublicKey: announcement.ephemeralPubKey,
-      userStealthAddress: announcement.stealthAddress,
-      viewTag: announcement.metadata,
-      schemeId: 1,
-      spendingPublicKey: userKeys.spendingPublicKey,
-      viewingPrivateKey: userKeys.viewingPrivateKey,
-    });
+    console.log("announcement:", announcement.ephemeralPubKey)
 
-    console.log("isForUser:", isForUser);
+    try {
+      const isForUser = parseStealthAddresses(
+        announcement.ephemeralPubKey,
+        announcement.stealthAddress,
+        userKeys.spendingPublicKey,
+        userKeys.viewingPrivateKey,
+        announcement.metadata,
+      );
+      console.log("isForUser:", isForUser);
+    } catch (e) {
+      console.error("Error parsing stealth addresses:", e)
+    }
+
   }
-
-
-  /*
-
-st:eth:0x028e9bfa1cd10a5caf3430f0950c1eee06d6ed6f92c80882cb6280848d2aadedb8025480981357796378a9ab0b1c0557f5709a0f546b88415438bf86b1bb188d85bf
-
-
-Spending Private Key: 0x5256b6d42240ae6294916bb9270bd214a5fc666623c4deaf00825c778e1f8eb6
-Viewing Private Key: 0x2a264a23bb95ff6b8c0fee48911fea6920ddf3a1c5ffd247b020fe5e761748c7
-Spending Public Key: 0x028e9bfa1cd10a5caf3430f0950c1eee06d6ed6f92c80882cb6280848d2aadedb8
-Viewing Public Key: 0x025480981357796378a9ab0b1c0557f5709a0f546b88415438bf86b1bb188d85bf
-
-st:eth:0x028e9bfa1cd10a5caf3430f0950c1eee06d6ed6f92c80882cb6280848d2aadedb8025480981357796378a9ab0b1c0557f5709a0f546b88415438bf86b1bb188d85bf
-Stealth Address: 0xfb64bb53c7c2cf08ab8124dd074210f00964763c
-Announcement: 0x02017b0de440cc36b44ef60f6c4af438d57d6bcd6dd9e893a1e18e2ab770ad94b1
-Metadata: 0x9c
-
-  */
 
   if (result.error) {
     console.error("GraphQL Error:", result.error);
     throw new Error("Failed to fetch announcements from The Graph.");
   }
 
-  const announcements = result.data.announcements;
-  console.log(`Found ${announcements.length} total announcements to scan.`);
-
-  const myStealthAddresses = new Set();
-  const viewingPrivateKeyBytes = hexToBytes(userKeys.viewingPrivateKey);
-  const spendingPublicKeyHex = userKeys.spendingPublicKey.startsWith('0x') ? userKeys.spendingPublicKey.slice(2) : userKeys.spendingPublicKey;
-
-  for (const ann of announcements) {
-    if (!ann.ephemeralPubKey || !ann.stealthAddress) continue;
-
-    const isOwner = checkStealthAddressOwnership(
-      ann.ephemeralPubKey,
-      viewingPrivateKeyBytes,
-      spendingPublicKeyHex,
-      ann.stealthAddress
-    );
-
-    if (isOwner) {
-      console.log(`✅ Match found! Stealth Address: ${ann.stealthAddress}`);
-      myStealthAddresses.add(ann.stealthAddress);
-    }
-  }
-
-  if (myStealthAddresses.size === 0) {
-    console.log("Scan complete. No matching stealth addresses found.");
-    return [];
-  }
-
-  console.log(`Fetching POAPs for ${myStealthAddresses.size} owned stealth addresses...`);
-  const poapPromises = Array.from(myStealthAddresses).map(address =>
-    fetch(`https://api.poap.tech/actions/scan/${address}`)
-      .then(res => {
-        if (!res.ok) throw new Error(`POAP API failed for ${address} with status ${res.status}`);
-        return res.json();
-      })
-      .catch(err => {
-        console.error(err);
-        return [];
-      })
-  );
-
-  const allPoapsNested = await Promise.all(poapPromises);
-  const allPoaps = allPoapsNested.flat();
-
-  console.log(`Scan complete. Found ${allPoaps.length} POAPs.`);
-  return allPoaps;
+  return []
 }

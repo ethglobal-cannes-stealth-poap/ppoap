@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { usePrivy } from '@privy-io/react-auth';
 import Layout from '../../components/layout';
-import { initializeStealthAddress } from '../../utils/pass-keys.js';
-import { scanForStealthAssets } from '../../utils/stealth-scanner.js';
+import { initializeStealthAddress } from '../../utils/pass-keys';
+import { scanForStealthAssets } from '../../utils/stealth-scanner';
 import Head from 'next/head';
 import { truncateAddress } from '../../utils/format';
 
