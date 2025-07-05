@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { setupPassKeys, runDemo } from "../utils/pass-keys.js";
 
 export const PassKey = () => {
@@ -29,16 +29,16 @@ export const PassKey = () => {
             setStatus('🔄 Starting EIP-5564 stealth meta-address generation...');
             setStatusType('info');
             setShowResults(false);
-            
+
             // Run the demo
             const result = await runDemo();
-            
+
             // Set results
             setResults(result);
             setShowResults(true);
             setStatus('✅ EIP-5564 stealth meta-address generated successfully!');
             setStatusType('success');
-            
+
         } catch (error) {
             console.error('Generation failed:', error);
             setStatus(`❌ Generation failed: ${error.message}`);
@@ -52,7 +52,7 @@ export const PassKey = () => {
     return (
         <div style={styles.container}>
             <h1 style={styles.title}>🔐 PPOAP Stealth Meta-Address Demo</h1>
-            
+
             <div style={styles.intro}>
                 <h3>🎯 EIP-5564 Stealth Address Generation</h3>
                 <p>This demo generates a stealth meta-address using WebAuthn API and EIP-5564 specification:</p>
@@ -65,21 +65,21 @@ export const PassKey = () => {
                     <li>Formats the stealth meta-address as: <code>st:eth:0x&lt;spendingPubKey&gt;&lt;viewingPubKey&gt;</code></li>
                 </ul>
             </div>
-            
+
             <div style={styles.reference}>
-                <strong>📚 Based on:</strong> <a href="https://github.com/nerolation/stealth-utils" target="_blank" rel="noopener noreferrer">nerolation/stealth-utils</a> 
+                <strong>📚 Based on:</strong> <a href="https://github.com/nerolation/stealth-utils" target="_blank" rel="noopener noreferrer">nerolation/stealth-utils</a>
                 and <a href="https://eips.ethereum.org/EIPS/eip-5564" target="_blank" rel="noopener noreferrer">EIP-5564 specification</a>
             </div>
-            
+
             <div style={styles.warning}>
                 <strong>⚠️ Requirements:</strong> This demo requires a WebAuthn-compatible browser and authenticator (biometric, security key, or platform authenticator). Modern browsers like Chrome, Firefox, Safari, and Edge support WebAuthn.
             </div>
-            
+
             <div style={styles.demoSection}>
                 <h3>🚀 Generate Stealth Meta-Address</h3>
                 <p>Click the button below to start the WebAuthn credential creation and stealth address generation process.</p>
-                
-                <button 
+
+                <button
                     style={{
                         ...styles.button,
                         ...((!isWebAuthnSupported || isGenerating) ? styles.buttonDisabled : {})
@@ -89,7 +89,7 @@ export const PassKey = () => {
                 >
                     {isGenerating ? 'Generating...' : 'Generate Stealth Meta-Address'}
                 </button>
-                
+
                 {status && (
                     <div style={{
                         ...styles.status,
@@ -98,7 +98,7 @@ export const PassKey = () => {
                         {status}
                     </div>
                 )}
-                
+
                 {showResults && results && (
                     <div style={styles.results}>
                         <h4 style={styles.resultsTitle}>🎯 Generated EIP-5564 Stealth Meta-Address</h4>
@@ -129,7 +129,7 @@ export const PassKey = () => {
                     </div>
                 )}
             </div>
-            
+
             <div style={styles.demoSection}>
                 <h3>📖 How it works</h3>
                 <ol>
@@ -141,7 +141,7 @@ export const PassKey = () => {
                     <li><strong>Address Formatting:</strong> Concatenates the public keys with the EIP-5564 prefix</li>
                 </ol>
             </div>
-            
+
             <div style={styles.demoSection}>
                 <h3>🌟 EIP-5564 Compliance</h3>
                 <p>This implementation follows the EIP-5564 specification with the following features:</p>
@@ -154,7 +154,7 @@ export const PassKey = () => {
                     <li>⚠️ <strong>Curve limitation:</strong> Uses P-256 (WebAuthn constraint) instead of secp256k1</li>
                 </ul>
             </div>
-            
+
             <div style={styles.footer}>
                 <p>Built with ❤️ for ETH Global 2025 - Cannes Edition</p>
                 <p>Using WebAuthn API + <a href="https://eips.ethereum.org/EIPS/eip-5564" target="_blank" rel="noopener noreferrer">EIP-5564</a> Stealth Address Specification</p>

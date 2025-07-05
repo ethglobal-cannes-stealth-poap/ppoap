@@ -2,8 +2,17 @@ import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { PrivyProvider } from "@privy-io/react-auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
+
+const queryClient = new QueryClient()
 
 function MyApp({ Component, pageProps }: AppProps) {
+
+  useEffect(() => {
+    window.Buffer = Buffer;
+  }, []);
+
   return (
     <>
       <Head>
@@ -43,12 +52,16 @@ function MyApp({ Component, pageProps }: AppProps) {
       <PrivyProvider
         appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
         config={{
-          embeddedWallets: {
-            createOnLogin: "all-users",
+          appearance: {
+            walletChainType: 'ethereum-only',
+            walletList: ['metamask', 'rainbow', 'wallet_connect'],
           },
         }}
       >
-        <Component {...pageProps} />
+        <QueryClientProvider client={queryClient}>
+
+          <Component {...pageProps} />
+        </QueryClientProvider>
       </PrivyProvider>
     </>
   );
