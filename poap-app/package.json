@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@noble/secp256k1": "^1.5.3",
     "@privy-io/react-auth": "^2.17.3",
     "@privy-io/wagmi": "^1.0.5",
     "@tanstack/react-query": "^5.81.5",
