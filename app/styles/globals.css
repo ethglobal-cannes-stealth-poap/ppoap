@@ -135,6 +135,66 @@ body {
   animation-delay: 1s;
 }
 
+.star-3 {
+  top: 25%;
+  left: 5%;
+  animation-delay: 2s;
+}
+
+.star-4 {
+  top: 35%;
+  right: 8%;
+  animation-delay: 1.5s;
+}
+
+.star-5 {
+  top: 45%;
+  left: 85%;
+  animation-delay: 0.5s;
+}
+
+.star-6 {
+  top: 60%;
+  left: 12%;
+  animation-delay: 2.5s;
+}
+
+.star-7 {
+  top: 70%;
+  right: 25%;
+  animation-delay: 3s;
+}
+
+.star-8 {
+  top: 18%;
+  left: 75%;
+  animation-delay: 0.8s;
+}
+
+.star-9 {
+  bottom: 15%;
+  right: 5%;
+  animation-delay: 1.8s;
+}
+
+.star-10 {
+  bottom: 40%;
+  left: 8%;
+  animation-delay: 2.2s;
+}
+
+.star-11 {
+  top: 55%;
+  left: 85%;
+  animation-delay: 3.5s;
+}
+
+.star-12 {
+  bottom: 25%;
+  right: 80%;
+  animation-delay: 0.3s;
+}
+
 .cloud {
   position: absolute;
   font-size: 24px;
@@ -148,17 +208,49 @@ body {
   animation-delay: 0.5s;
 }
 
-.spiral {
-  position: absolute;
-  font-size: 16px;
-  color: #e6e6fa;
-  animation: rotate 8s linear infinite;
+.cloud-2 {
+  top: 65%;
+  right: 12%;
+  animation-delay: 2s;
 }
 
-.spiral-1 {
-  bottom: 35%;
-  right: 10%;
+.cloud-3 {
+  top: 30%;
+  right: 20%;
+  animation-delay: 3s;
 }
+
+.cloud-4 {
+  bottom: 20%;
+  left: 15%;
+  animation-delay: 1s;
+}
+
+.cloud-5 {
+  top: 80%;
+  left: 70%;
+  animation-delay: 2.5s;
+}
+
+.cloud-6 {
+  top: 40%;
+  left: 3%;
+  animation-delay: 1.5s;
+}
+
+.cloud-7 {
+  bottom: 10%;
+  right: 40%;
+  animation-delay: 3.2s;
+}
+
+.cloud-8 {
+  top: 22%;
+  left: 60%;
+  animation-delay: 0.8s;
+}
+
+
 
 @keyframes float {
   0%,
@@ -179,6 +271,26 @@ body {
   }
 }
 
+@keyframes rotate-glow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-glow {
+  from {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.5;
+    transform: scale(1.02);
+  }
+}
+
 .poap-container {
   position: relative;
   z-index: 2;
@@ -188,47 +300,19 @@ body {
   align-items: center;
 }
 
-.poap-circle {
-  position: relative;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 8px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-}
-
-.progress-ring {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 268px;
-  height: 268px;
-  border-radius: 50%;
-  background: conic-gradient(
-    #ff6b6b 0deg 60deg,
-    #4ecdc4 60deg 120deg,
-    #45b7d1 120deg 180deg,
-    #f9ca24 180deg 240deg,
-    #f0932b 240deg 300deg,
-    #eb4d4b 300deg 360deg
-  );
-  z-index: 1;
-}
-
 .poap-content {
   position: relative;
   z-index: 3;
   background: white;
   border-radius: 50%;
-  width: 244px;
-  height: 244px;
+  width: 220px;
+  height: 220px;
   margin: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .met-text {
@@ -236,20 +320,44 @@ body {
   font-weight: bold;
   color: #4a90e2;
   margin-bottom: 8px;
-  letter-spacing: 0.5px;
+  letter-spacing: 2px;
+  text-align: center;
+  transform: rotate(-2deg);
+  border-radius: 50%;
 }
 
 .avatar {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 8px;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.avatar::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  right: -12px;
+  bottom: -12px;
+  background: conic-gradient(
+    from 0deg,
+    #ff7f00 0%,
+    rgba(255, 127, 0, 0.2) 25%,
+    #ff4500 50%,
+    rgba(255, 69, 0, 0.2) 75%,
+    #ff7f00 100%
+  );
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate-glow 2s linear infinite,
+    pulse-glow 3s ease-in-out infinite alternate;
+  filter: blur(8px);
+  opacity: 0.6;
 }
 
 .avatar-image {
@@ -276,11 +384,27 @@ body {
   z-index: 2;
 }
 
+.curved-text-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.curved-text-container-bottom {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+}
+
 .name-text {
   font-size: 20px;
   font-weight: bold;
   color: #2c3e50;
   margin-top: 8px;
+  letter-spacing: 1px;
+  text-align: center;
+  transform: rotate(1deg);
 }
 
 .attendance-count {
