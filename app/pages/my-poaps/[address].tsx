@@ -27,7 +27,7 @@ export default function MyPoapsPage() {
   const [error, setError] = useState<string | null>(null);
   const [foundPoaps, setFoundPoaps] = useState<Poap[]>([]);
   const [hasScanned, setHasScanned] = useState(false);
-  
+
   const isOwner = ready && authenticated && user?.wallet?.address.toLowerCase() === (address as string)?.toLowerCase();
 
   const handleScan = async () => {
@@ -45,8 +45,9 @@ export default function MyPoapsPage() {
       if (!userKeys.viewingPrivateKey || !userKeys.spendingPublicKey) {
         throw new Error("Could not retrieve stealth keys from passkey. Please try again.");
       }
-      
+
       const poaps = await scanForStealthAssets(userKeys);
+      console.log("poaps found:", poaps);
       setFoundPoaps(poaps);
     } catch (err: any) {
       console.error("Scan failed:", err);
@@ -90,9 +91,9 @@ export default function MyPoapsPage() {
               </button>
             </div>
           ) : (
-             <div className="text-center bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <div className="text-center bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
               {authenticated ? (
-                 <p>This page is for wallet <code className="font-bold">{truncateAddress(address as string)}</code>, but you are logged in with <code className="font-bold">{truncateAddress(user?.wallet?.address)}</code>. Please log out and reconnect with the correct wallet.</p>
+                <p>This page is for wallet <code className="font-bold">{truncateAddress(address as string)}</code>, but you are logged in with <code className="font-bold">{truncateAddress(user?.wallet?.address)}</code>. Please log out and reconnect with the correct wallet.</p>
               ) : (
                 <p>Please log in with the wallet <code className="font-bold">{truncateAddress(address as string)}</code> to scan for its private POAPs.</p>
               )}
@@ -110,7 +111,7 @@ export default function MyPoapsPage() {
                 <p className="mt-4 text-gray-600">Scanning announcements and fetching POAPs...</p>
               </div>
             )}
-            
+
             {!isLoading && foundPoaps.length > 0 && (
               <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Found {foundPoaps.length} POAP(s)</h2>
@@ -119,7 +120,7 @@ export default function MyPoapsPage() {
                 </div>
               </>
             )}
-            
+
             {!isLoading && hasScanned && foundPoaps.length === 0 && !error && (
               <div className="text-center text-gray-500 mt-8 bg-gray-50 p-6 rounded-lg">
                 <p className="text-lg">Scan complete. No POAPs found.</p>

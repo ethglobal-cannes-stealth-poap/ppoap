@@ -2,6 +2,17 @@ import * as secp from '@noble/secp256k1';
 import { keccak256 } from 'viem';
 import { toEthAddress } from "./index.js";
 import { cacheExchange, createClient, fetchExchange, Provider, useQuery } from 'urql';
+import { checkStealthAddress } from "@scopelift/stealth-address-sdk";
+
+// export interface StealthAddressResult {
+//   stealthMetaAddress: string;
+//   spendingPrivateKey: string;
+//   viewingPrivateKey: string;
+//   spendingPublicKey: string;
+//   viewingPublicKey: string;
+//   viewTag: string;
+//   credentialUsed: string;
+// }
 
 // Helper to convert a hex string to a Uint8Array
 const hexToBytes = (hex) => {
@@ -39,7 +50,7 @@ function checkStealthAddressOwnership(ephemeralPubKey: string, viewingPrivateKey
 
     // Compare with the address from the announcement
     return computedStealthAddress.toLowerCase() === targetStealthAddress.toLowerCase();
-    
+
   } catch (error) {
     // Catch errors if the ephemeralPubKey is not a valid point on the curve.
     console.warn(`Could not process ephemeralPubKey: ${ephemeralPubKey}. It is likely an invalid curve point. Skipping.`);
@@ -49,17 +60,14 @@ function checkStealthAddressOwnership(ephemeralPubKey: string, viewingPrivateKey
 
 const GRAPH_URL = 'https://api.studio.thegraph.com/query/115552/correct-contract/version/latest';
 const client = createClient({
-    url: GRAPH_URL,
-    fetchOptions: {
-
+  url: GRAPH_URL,
+  fetchOptions: {
     headers: {
 
       Authorization: 'Bearer dda69902abbe4922d3c01f9278ca713d',
 
     },
-
   },
-
   exchanges: [cacheExchange, fetchExchange],
 });
 
@@ -81,12 +89,49 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
 
   console.log("Fetching announcements from The Graph...");
   const result = await client.query(AnnouncementsQuery).toPromise();
-    debugger
+  console.log("result:", result);
+
+  for (const announcement of result.data.announcements) {
+    if (!announcement.ephemeralPubKey || !announcement.stealthAddress) {
+      console.warn(`Skipping announcement ${announcement.id} due to missing ephemeralPubKey or stealthAddress.`);
+      continue;
+    }
+
+    const isForUser = checkStealthAddress({
+      ephemeralPublicKey: announcement.ephemeralPubKey,
+      userStealthAddress: announcement.stealthAddress,
+      viewTag: announcement.metadata,
+      schemeId: 1,
+      spendingPublicKey: userKeys.spendingPublicKey,
+      viewingPrivateKey: userKeys.viewingPrivateKey,
+    });
+
+    console.log("isForUser:", isForUser);
+  }
+
+
+  /*
+
+st:eth:0x028e9bfa1cd10a5caf3430f0950c1eee06d6ed6f92c80882cb6280848d2aadedb8025480981357796378a9ab0b1c0557f5709a0f546b88415438bf86b1bb188d85bf
+
+
+Spending Private Key: 0x5256b6d42240ae6294916bb9270bd214a5fc666623c4deaf00825c778e1f8eb6
+Viewing Private Key: 0x2a264a23bb95ff6b8c0fee48911fea6920ddf3a1c5ffd247b020fe5e761748c7
+Spending Public Key: 0x028e9bfa1cd10a5caf3430f0950c1eee06d6ed6f92c80882cb6280848d2aadedb8
+Viewing Public Key: 0x025480981357796378a9ab0b1c0557f5709a0f546b88415438bf86b1bb188d85bf
+
+st:eth:0x028e9bfa1cd10a5caf3430f0950c1eee06d6ed6f92c80882cb6280848d2aadedb8025480981357796378a9ab0b1c0557f5709a0f546b88415438bf86b1bb188d85bf
+Stealth Address: 0xfb64bb53c7c2cf08ab8124dd074210f00964763c
+Announcement: 0x02017b0de440cc36b44ef60f6c4af438d57d6bcd6dd9e893a1e18e2ab770ad94b1
+Metadata: 0x9c
+
+  */
+
   if (result.error) {
     console.error("GraphQL Error:", result.error);
     throw new Error("Failed to fetch announcements from The Graph.");
   }
-  
+
   const announcements = result.data.announcements;
   console.log(`Found ${announcements.length} total announcements to scan.`);
 
@@ -96,7 +141,7 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
 
   for (const ann of announcements) {
     if (!ann.ephemeralPubKey || !ann.stealthAddress) continue;
-    
+
     const isOwner = checkStealthAddressOwnership(
       ann.ephemeralPubKey,
       viewingPrivateKeyBytes,
