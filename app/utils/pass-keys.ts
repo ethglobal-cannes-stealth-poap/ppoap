@@ -8,20 +8,34 @@ import * as secp from '@noble/secp256k1';
 const CREDENTIAL_STORAGE_KEY = 'ppoap-webauthn-credentials';
 const STATIC_MESSAGE = 'cannes-love-poap';
 
+interface CredentialDescriptor {
+  id: string;
+  type: 'public-key';
+  createdAt: string;
+}
+
+interface StealthAddressResult {
+  stealthMetaAddress: string;
+  spendingPrivateKey: string;
+  viewingPrivateKey: string;
+  spendingPublicKey: string;
+  viewingPublicKey: string;
+  viewTag: string;
+  credentialUsed: string;
+}
+
 /**
  * Get stored credentials from localStorage
- * @returns {Array<any>} - Array of stored credential descriptors
  */
-function getStoredCredentials() {
+function getStoredCredentials(): CredentialDescriptor[] {
   const stored = localStorage.getItem(CREDENTIAL_STORAGE_KEY);
   return stored ? JSON.parse(stored) : [];
 }
 
 /**
  * Store credential in localStorage
- * @param {Object} credentialDescriptor - The credential descriptor to store
  */
-function storeCredential(credentialDescriptor) {
+function storeCredential(credentialDescriptor: CredentialDescriptor): void {
   const stored = getStoredCredentials();
   stored.push(credentialDescriptor);
   localStorage.setItem(CREDENTIAL_STORAGE_KEY, JSON.stringify(stored));
@@ -29,9 +43,8 @@ function storeCredential(credentialDescriptor) {
 
 /**
  * Setup WebAuthn credentials with excludeCredentials to prevent duplicates
- * @returns {Promise<Object>} - The credential descriptor
  */
-export const setupPassKeys = async () => {
+export const setupPassKeys = async (): Promise<CredentialDescriptor> => {
   try {
     if (!window.PublicKeyCredential) {
       throw new Error('WebAuthn is not supported in this browser');
@@ -42,7 +55,7 @@ export const setupPassKeys = async () => {
     
     if (existingCredentials.length > 0) {
       console.log('WebAuthn credentials already exist, skipping setup');
-      return existingCredentials[0]; // Return the first credential
+      return existingCredentials[0]!; // Return the first credential
     }
 
     console.log('Generating WebAuthn credential...');
@@ -50,10 +63,10 @@ export const setupPassKeys = async () => {
     // Convert existing credential IDs to proper format for excludeCredentials
     const excludeCredentials = existingCredentials.map(cred => ({
       id: hexToArray(cred.id),
-      type: /** @type {const} */ ('public-key')
+      type: 'public-key' as const
     }));
 
-    const credential = /** @type {PublicKeyCredential} */ (await navigator.credentials.create({
+    const credential = (await navigator.credentials.create({
       publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
         rp: {
@@ -79,7 +92,7 @@ export const setupPassKeys = async () => {
         // Exclude existing credentials to prevent duplicates
         excludeCredentials: excludeCredentials,
       },
-    }));
+    })) as PublicKeyCredential;
 
     if (!credential) {
       throw new Error('Failed to create WebAuthn credential');
@@ -87,7 +100,7 @@ export const setupPassKeys = async () => {
 
     console.log('WebAuthn credential created successfully');
     
-    const credentialDescriptor = {
+    const credentialDescriptor: CredentialDescriptor = {
       id: arrayToHex(new Uint8Array(credential.rawId)),
       type: 'public-key',
       createdAt: new Date().toISOString(),
@@ -103,7 +116,7 @@ export const setupPassKeys = async () => {
       console.log('Credential already exists on this authenticator');
       const existingCredentials = getStoredCredentials();
       if (existingCredentials.length > 0) {
-        return existingCredentials[0];
+        return existingCredentials[0]!;
       }
     }
     console.error('Error setting up WebAuthn credentials:', error);
@@ -113,10 +126,8 @@ export const setupPassKeys = async () => {
 
 /**
  * Authenticate using existing WebAuthn credentials to sign a message
- * @param {string} message - The message to sign (optional, defaults to static message)
- * @returns {Promise<Object>} - The stealth meta-address and keys
  */
-export const authenticateAndGenerateStealthAddress = async (message = STATIC_MESSAGE) => {
+export const authenticateAndGenerateStealthAddress = async (message: string = STATIC_MESSAGE): Promise<StealthAddressResult> => {
   try {
     if (!window.PublicKeyCredential) {
       throw new Error('WebAuthn is not supported in this browser');
@@ -129,19 +140,19 @@ export const authenticateAndGenerateStealthAddress = async (message = STATIC_MES
 
     const allowCredentials = storedCredentials.map(cred => ({
       id: hexToArray(cred.id),
-      type: /** @type {const} */ ('public-key')
+      type: 'public-key' as const
     }));
 
     const messageBuffer = new TextEncoder().encode(message);
     
-    const assertion = /** @type {PublicKeyCredential} */ (await navigator.credentials.get({
+    const assertion = (await navigator.credentials.get({
       publicKey: {
         challenge: messageBuffer,
         allowCredentials: allowCredentials,
         userVerification: 'preferred',
         timeout: 60000,
       },
-    }));
+    })) as PublicKeyCredential;
 
     if (!assertion) {
       throw new Error('Failed to get WebAuthn assertion');
@@ -192,24 +203,22 @@ export const authenticateAndGenerateStealthAddress = async (message = STATIC_MES
 
 /**
  * Check if WebAuthn credentials are already set up
- * @returns {boolean} - True if credentials exist
  */
-export const hasCredentials = () => {
+export const hasCredentials = (): boolean => {
   return getStoredCredentials().length > 0;
 };
 
 /**
  * Get all stored credentials
- * @returns {Array<any>} - Array of credential descriptors
  */
-export const getCredentials = () => {
+export const getCredentials = (): CredentialDescriptor[] => {
   return getStoredCredentials();
 };
 
 /**
  * Clear stored WebAuthn credentials (for testing or reset)
  */
-export const clearCredentials = () => {
+export const clearCredentials = (): void => {
   localStorage.removeItem(CREDENTIAL_STORAGE_KEY);
   console.log('WebAuthn credentials cleared');
 };
@@ -217,9 +226,8 @@ export const clearCredentials = () => {
 /**
  * Initialize the stealth address system
  * Sets up credentials if they don't exist, then generates stealth address
- * @returns {Promise<Object>} - The stealth meta-address and keys
  */
-export const initializeStealthAddress = async () => {
+export const initializeStealthAddress = async (): Promise<StealthAddressResult> => {
   try {
     // Setup credentials if they don't exist
     if (!hasCredentials()) {
@@ -237,11 +245,8 @@ export const initializeStealthAddress = async () => {
 /**
  * Derive spending and viewing keys from WebAuthn signature using HKDF
  * Following EIP-5564 key derivation patterns
- * @param {Uint8Array} signature - The WebAuthn signature
- * @param {string} staticMessage - The static message used for signing
- * @returns {Promise<{spendingKey: Uint8Array, viewingKey: Uint8Array}>} - Object containing spending and viewing keys
  */
-export const deriveStealthKeys = async (signature, staticMessage) => {
+export const deriveStealthKeys = async (signature: Uint8Array, staticMessage: string): Promise<{spendingKey: Uint8Array, viewingKey: Uint8Array}> => {
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
     signature,
@@ -286,10 +291,8 @@ export const deriveStealthKeys = async (signature, staticMessage) => {
 
 /**
  * Normalize private key to ensure it's a valid secp256k1 private key
- * @param {Uint8Array} keyMaterial - Raw key material
- * @returns {Promise<Uint8Array>} - Valid secp256k1 private key
  */
-async function normalizePrivateKey(keyMaterial) {
+async function normalizePrivateKey(keyMaterial: Uint8Array): Promise<Uint8Array> {
   // Ensure the key is exactly 32 bytes
   if (keyMaterial.length !== 32) {
     throw new Error('Private key must be exactly 32 bytes');
@@ -309,10 +312,8 @@ async function normalizePrivateKey(keyMaterial) {
 
 /**
  * Generate compressed public key from private key using secp256k1
- * @param {Uint8Array} privateKey - The private key
- * @returns {Promise<string>} - The compressed public key in hex format
  */
-async function getCompressedPublicKey(privateKey) {
+async function getCompressedPublicKey(privateKey: Uint8Array): Promise<string> {
   try {
     // Use noble/secp256k1 to generate the public key
     const publicKey = secp.getPublicKey(privateKey, true); // true for compressed format
@@ -326,10 +327,8 @@ async function getCompressedPublicKey(privateKey) {
 /**
  * Generate view tag for efficient stealth address parsing
  * Following EIP-5564 view tag specification
- * @param {string} publicKey - The public key in hex format
- * @returns {Promise<string>} - The view tag in hex format (1 byte)
  */
-async function generateViewTag(publicKey) {
+async function generateViewTag(publicKey: string): Promise<string> {
   // Remove 0x prefix if present
   const cleanPubKey = publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey;
   
@@ -344,10 +343,8 @@ async function generateViewTag(publicKey) {
 
 /**
  * Convert hex string to Uint8Array
- * @param {string} hex - Hex string
- * @returns {Uint8Array} - Byte array
  */
-function hexToArray(hex) {
+function hexToArray(hex: string): Uint8Array {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
@@ -357,10 +354,8 @@ function hexToArray(hex) {
 
 /**
  * Convert Uint8Array to hex string
- * @param {Uint8Array} array - Byte array
- * @returns {string} - Hex string
  */
-function arrayToHex(array) {
+function arrayToHex(array: Uint8Array): string {
   return Array.from(array)
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
@@ -371,9 +366,8 @@ export const generateStealthAddress = initializeStealthAddress;
 
 /**
  * Demonstrate stealth address generation with comprehensive logging
- * @returns {Promise<Object>} - The generation results
  */
-export const runDemo = async () => {
+export const runDemo = async (): Promise<StealthAddressResult> => {
   console.log('🚀 Starting EIP-5564 Stealth Meta-Address Demo...');
   console.log('Based on: https://github.com/nerolation/stealth-utils');
   console.log('');

@@ -1,4 +1,4 @@
-import { SyntheticEvent, useState } from "react";
+import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { initializeStealthAddress } from "../utils/pass-keys";
@@ -98,7 +98,7 @@ function PoapClaim({ poapId }: { poapId: string }) {
     setGetAnonAddress(true);
   }
 
-  const handleSubmit = async (e: SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const reciever = stealthAddress

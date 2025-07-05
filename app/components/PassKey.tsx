@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { runDemo } from "../utils/pass-keys.js";
+import React, { useState, useEffect, CSSProperties } from "react";
+import { runDemo } from "../utils/pass-keys";
+
+interface StealthAddressResult {
+  stealthMetaAddress: string;
+  spendingPrivateKey: string;
+  viewingPrivateKey: string;
+  spendingPublicKey: string;
+  viewingPublicKey: string;
+  viewTag: string;
+}
 
 export const PassKey = () => {
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState("info");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isWebAuthnSupported, setIsWebAuthnSupported] = useState(false);
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState<StealthAddressResult | null>(null);
   const [showResults, setShowResults] = useState(false);
 
   // Check WebAuthn support on component mount
@@ -35,14 +44,14 @@ export const PassKey = () => {
       setShowResults(false);
 
       // Run the demo
-      const result = await runDemo();
+      const result = await runDemo() as StealthAddressResult;
 
       // Set results
       setResults(result);
       setShowResults(true);
       setStatus("✅ EIP-5564 stealth meta-address generated successfully!");
       setStatusType("success");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Generation failed:", error);
       setStatus(`❌ Generation failed: ${error.message}`);
       setStatusType("error");
@@ -135,8 +144,9 @@ export const PassKey = () => {
             style={{
               ...styles.status,
               ...styles[
-              `status${statusType.charAt(0).toUpperCase() + statusType.slice(1)
-              }`
+                `status${
+                  statusType.charAt(0).toUpperCase() + statusType.slice(1)
+                }`
               ],
             }}
           >
@@ -274,7 +284,7 @@ export const PassKey = () => {
 };
 
 // Styles object
-const styles = {
+const styles: Record<string, CSSProperties> = {
   container: {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     margin: 0,
@@ -285,7 +295,7 @@ const styles = {
   },
   title: {
     color: "#2c3e50",
-    textAlign: "center",
+    textAlign: "center" as const,
     marginBottom: "30px",
     fontSize: "2.5em",
   },
@@ -367,7 +377,7 @@ const styles = {
     fontFamily: "'Courier New', monospace",
     fontSize: "12px",
     marginTop: "20px",
-    wordBreak: "break-all",
+    wordBreak: "break-all" as const,
   },
   resultsTitle: {
     color: "#00ff00",
@@ -385,10 +395,10 @@ const styles = {
   },
   resultValue: {
     color: "#00ff00",
-    wordBreak: "break-all",
+    wordBreak: "break-all" as const,
   },
   footer: {
-    textAlign: "center",
+    textAlign: "center" as const,
     marginTop: "30px",
     padding: "20px",
     borderTop: "1px solid #e9ecef",
