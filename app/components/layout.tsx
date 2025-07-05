@@ -9,9 +9,6 @@ type Props = {
 export default function Layout({
   children,
 }: Props) {
-  // const { ready, authenticated } = usePrivy();
-  // const router = useRouter();
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

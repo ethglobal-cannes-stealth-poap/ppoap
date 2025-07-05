@@ -16,7 +16,6 @@ export default async function handler(
   }
 
   try {
-    console.log("in the post request");
     const { poapId, address } = req.body;
 
     if (!poapId || !address) {
@@ -24,10 +23,7 @@ export default async function handler(
         error: "Missing required fields: poapId and address",
       });
     }
-    console.log("pARAMS: ", {
-      website: poapId,
-      address,
-    });
+
     const response = await axios.post(
       "https://api.poap.tech/website/claim",
       {

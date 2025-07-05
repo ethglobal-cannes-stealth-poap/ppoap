@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { initializeStealthAddress } from "../utils/pass-keys";
-import { generateStealthAddress } from "../utils/stealth-address";
 
 interface MintResponse {
   id: string;
@@ -15,24 +13,15 @@ interface MintResponse {
   qr_hash?: string;
 }
 
-function PoapClaim({ poapId }: { poapId: string }) {
+interface PoapClaimProps {
+  poapId: string
+  mintToAddress?: string;
+  setMintToAddress: (address: string) => void;
+}
+
+function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) {
   const [minting, setMinting] = useState(false);
   const [mintResponse, setMintResponse] = useState<MintResponse | null>(null);
-
-  const [getAnonAddress, setGetAnonAddress] = useState(false);
-
-  const { data: stealthAddress } = useQuery({
-    queryKey: ["stealth-address"],
-    enabled: getAnonAddress,
-    queryFn: async () => {
-      const data = (await initializeStealthAddress()) as any;
-
-      const stealthAddress = await generateStealthAddress(
-        data.stealthMetaAddress
-      );
-      return stealthAddress.stealthAddress;
-    },
-  });
 
   const { data: poap, isLoading: isLoadingPoap } = useQuery({
     queryKey: ["poap", poapId],
@@ -107,22 +96,16 @@ function PoapClaim({ poapId }: { poapId: string }) {
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
       throw new Error(
-        `Mint failed (${err.response?.status || "Network Error"}): ${
-          err.response?.data?.error || err.message
+        `Mint failed (${err.response?.status || "Network Error"}): ${err.response?.data?.error || err.message
         }`
       );
     }
   };
 
-  const handleGetAnonAddress = async () => {
-    setGetAnonAddress(true);
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const reciever = stealthAddress;
-
+    const reciever = mintToAddress;
     const mintToWallet = reciever;
 
     if (!mintToWallet?.trim()) {
@@ -166,8 +149,8 @@ function PoapClaim({ poapId }: { poapId: string }) {
             throw new Error("No address found for the provided ENS");
           }
         } else {
-          console.log(stealthAddress);
-          targetAddress = stealthAddress;
+          console.log(mintToAddress);
+          targetAddress = mintToAddress;
         }
 
         console.log("Minting POAP:", {
@@ -278,26 +261,18 @@ function PoapClaim({ poapId }: { poapId: string }) {
 
         <div className="collect-section">
           <form onSubmit={handleSubmit} className="mint-form">
-            <button
-              type="button"
-              className="mint-button"
-              onClick={handleGetAnonAddress}
-            >
-              Get Anon Address
-            </button>
-
             <input
               type="text"
               placeholder="ENS or Ethereum address"
-              value={stealthAddress}
+              value={mintToAddress}
               disabled={true}
-              // onChange={(e) => setMintToWallet(e.target.value)}
+              onChange={(e) => setMintToAddress(e.target.value)}
               className="address-input"
             />
             <button
               type="submit"
               className="mint-button"
-              disabled={minting || !stealthAddress?.trim()}
+              disabled={minting || !mintToAddress}
             >
               {minting ? "Minting..." : "Mint now"}
             </button>
