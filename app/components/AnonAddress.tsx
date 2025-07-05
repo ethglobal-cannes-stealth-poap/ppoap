@@ -5,18 +5,35 @@ import { generateStealthAddress } from "../utils/stealth-address";
 
 interface AnonAddressProps {
   mintToAddress?: string;
-  setMintToAddress: (address: string) => void;
+  setStealthAddressInfo: (info: {
+    stealthAddress: string;
+    ephemeralPubKey: string;
+    metadata: string;
+  }) => void;
+  setMetaAddressInfo: (info: {
+    stealthMetaAddress: string
+    spendingPrivateKey: string
+    viewingPrivateKey: string
+    spendingPublicKey: string
+    viewingPublicKey: string
+    viewTag: string
+    credentialUsed: string
+  }) => void;
 }
 
-function AnonAddress({ mintToAddress, setMintToAddress }: AnonAddressProps) {
+function AnonAddress({ mintToAddress, setStealthAddressInfo }: AnonAddressProps) {
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
       console.log("Generating stealth address...");
-      const data = await initializeStealthAddress() as any
+      const data = await initializeStealthAddress()
 
       const stealthAddress = await generateStealthAddress(data.stealthMetaAddress)
 
-      setMintToAddress(stealthAddress.stealthAddress);
+      setStealthAddressInfo({
+        stealthAddress: stealthAddress.stealthAddress,
+        ephemeralPubKey: stealthAddress.ephemeralPublicKey,
+        metadata: stealthAddress.ViewTag,
+      });
       toast.success("Anon address generated successfully!");
     }
   });

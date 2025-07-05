@@ -11,12 +11,13 @@ import toast from "react-hot-toast";
 
 export const setMetaAddress = async ({
   wallet,
-  address,
+  stealthMetaAddress,
 }: {
   wallet: ConnectedWallet;
-  address: string;
+  stealthMetaAddress: string;
 }) => {
   const toastId = toast.loading("Sign the transaction to stake...");
+  const trimmedMetaAddress = stealthMetaAddress.replace("st:eth:", "");
   try {
     const walletClient = await getWalletClient(configFront, {
       chainId: CHAIN_ID,
@@ -30,13 +31,13 @@ export const setMetaAddress = async ({
       account: wallet.address as `0x${string}`,
       address: REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
-      args: [BigInt(1), address],
+      args: [BigInt(1), trimmedMetaAddress],
       functionName: "registerKeys",
     });
 
     const hash = await walletClient.writeContract(request);
     const receipt = await waitForTransactionReceipt(configFront, { hash });
-    toast.success("Successfully staked.", { id: toastId });
+    toast.success("Successfully registered meta address.", { id: toastId });
     return receipt;
   } catch (e: any) {
     if (e.toString().includes("insufficient funds")) {
