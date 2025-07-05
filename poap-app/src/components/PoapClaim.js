@@ -1,119 +1,87 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from "react-router-dom";
+import axios from 'axios';
 
 function PoapClaim() {
-  const [email, setEmail] = useState("");
-  const [poapData, setPoapData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [mintToWallet, setMintToWallet] = useState("");
   const [minting, setMinting] = useState(false);
   const [mintResponse, setMintResponse] = useState(null);
 
-  // Extract claim name from URL
-  const getClaimName = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    // Check for claim parameter
-    const claimName =
-      urlParams.get("claim") || urlParams.get("name") || urlParams.get("code");
+  const params = useParams();
+  const poapId = params.id;
 
-    // If no parameter, check if the claim name is in the URL path
-    const pathMatch = window.location.pathname.match(/\/([a-zA-Z0-9-]+)$/);
-    if (!claimName && pathMatch) {
-      return pathMatch[1];
-    }
+  const { data: poap, isLoading: isLoadingPoap } = useQuery({
+    queryKey: ['poap', poapId],
+    queryFn: async () => {
+      if (!poapId) {
+        throw new Error("No poapId provided");
+      }
 
-    return claimName; // No default - must be provided
-  };
+      try {
+        // Use axios instead of fetch
+        const response = await axios.get(`/api/collectors/api/website/${poapId}/validate`, {
+          headers: {
+            Accept: "application/json",
+          },
+        });
 
-  const fetchPoapData = async (claimName) => {
+        const data = response.data;
+        console.log("POAP Collectors API Response:", data);
+
+        // The response should have event data
+        if (!data) {
+          throw new Error("No data found in response");
+        }
+
+        const transformedData = {
+          id: data.id || data.event?.id,
+          name: data.name || data.event?.name || "POAP Event",
+          description: data.description || data.event?.description || "",
+          image_url: data.image_url || data.image || data.event?.image_url,
+          start_date: data.start_date || data.event?.start_date,
+          end_date: data.end_date || data.event?.end_date,
+          claim_name: poapId,
+          event: data.event || data,
+          ...data,
+        };
+
+        return transformedData;
+      } catch (err) {
+        if (err.response?.status) {
+          throw new Error(`Invalid claim name: ${poapId} (${err.response.status})`);
+        }
+        throw new Error(err.message || `Failed to fetch POAP data for: ${poapId}`);
+      }
+    },
+    isEnabled: !!poapId,
+  })
+
+  const performMint = async (address, poapId) => {
     try {
-      setLoading(true);
-      // Use the collectors POAP API validate endpoint to get metadata
-      const response = await fetch(`/api/collectors/api/website/${claimName}/validate`, {
-        method: "GET",
+      const response = await axios.post(`/api/poap/website/claim`, {
+        website: poapId,
+        address: address
+      }, {
         headers: {
-          Accept: "application/json",
-        },
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-API-Key': process.env.REACT_APP_POAP_API_KEY || ''
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Invalid claim name: ${claimName}`);
-      }
-
-      const data = await response.json();
-      console.log(
-        "POAP Collectors API Response:",
-        JSON.stringify(data, null, 2)
-      );
-
-      // The response should have event data
-      if (!data) {
-        throw new Error("No data found in response");
-      }
-
-      // Transform the response to match our expected format
-      const transformedData = {
-        id: data.id || data.event?.id,
-        name: data.name || data.event?.name || "POAP Event",
-        description: data.description || data.event?.description || "",
-        image_url: data.image_url || data.image || data.event?.image_url, // This should be the POAP image
-        start_date: data.start_date || data.event?.start_date,
-        end_date: data.end_date || data.event?.end_date,
-        claim_name: claimName,
-        event: data.event || data,
-        ...data,
-      };
-
-      console.log("Event image URL:", transformedData.image_url);
-      setPoapData(transformedData);
+      console.log("Mint API success response:", JSON.stringify(response.data, null, 2));
+      return response.data;
     } catch (err) {
-      setError(err.message);
-      setPoapData(null);
-    } finally {
-      setLoading(false);
+      console.log("Mint API error:", err.response?.data || err.message);
+      throw new Error(`Mint failed (${err.response?.status || 'Network Error'}): ${err.response?.data || err.message}`);
     }
-  };
-
-  useEffect(() => {
-    const claimName = getClaimName();
-    if (claimName) {
-      fetchPoapData(claimName);
-    } else {
-      setError("No claim name provided");
-      setLoading(false);
-    }
-  }, []);
-
-  const performMint = async (address, claimName) => {
-    const mintResponse = await fetch(`/api/poap/website/claim`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-API-Key': process.env.REACT_APP_POAP_API_KEY || ''
-      },
-      body: JSON.stringify({
-        website: claimName,
-        address: address
-      })
-    });
-
-    console.log("Mint API response status:", mintResponse.status);
-
-    if (!mintResponse.ok) {
-      const errorText = await mintResponse.text();
-      console.log("Mint API error response:", errorText);
-      throw new Error(`Mint failed (${mintResponse.status}): ${errorText}`);
-    }
-
-    const responseData = await mintResponse.json();
-    console.log("Mint API success response:", JSON.stringify(responseData, null, 2));
-    return responseData;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!email.trim()) {
+
+    if (!mintToWallet.trim()) {
       alert("Please enter an email, ENS or Ethereum address");
       return;
     }
@@ -123,57 +91,55 @@ function PoapClaim() {
 
     try {
       // Check if the input looks like an ENS domain or Ethereum address
-      const isEns = email.includes('.eth');
-      const isEthAddress = /^0x[a-fA-F0-9]{40}$/.test(email.trim());
+      const isEns = mintToWallet.includes('.eth');
+      const isEthAddress = /^0x[a-fA-F0-9]{40}$/.test(mintToWallet.trim());
       const isEnsOrAddress = isEns || isEthAddress;
-      
+
       console.log("Input validation:", {
-        input: email.trim(),
+        input: mintToWallet.trim(),
         isEns,
         isEthAddress,
         isEnsOrAddress
       });
-      
+
       let targetAddress = null;
-      
+
       if (isEnsOrAddress) {
         if (isEns) {
           // For ENS domains, resolve to address using POAP profiles API
-          const profileResponse = await fetch(`/api/profiles/profile/${email.trim()}`);
-          
+          const profileResponse = await fetch(`/api/profiles/profile/${mintToWallet.trim()}`);
+
           if (!profileResponse.ok) {
             throw new Error("Invalid ENS domain or ENS not found");
           }
-          
+
           const profileData = await profileResponse.json();
           console.log("ENS validation response:", profileData);
-          
+
           targetAddress = profileData.address;
-          
+
           if (!targetAddress) {
             throw new Error("No address found for the provided ENS");
           }
         } else {
           // For Ethereum addresses, use directly
-          targetAddress = email.trim();
+          targetAddress = mintToWallet.trim();
         }
-        
-        // Perform the actual mint
-        const claimName = getClaimName();
-        console.log("Minting POAP:", { 
-          address: targetAddress, 
-          claimName,
+
+        console.log("Minting POAP:", {
+          address: targetAddress,
+          poapId,
           hasApiKey: !!process.env.REACT_APP_POAP_API_KEY
         });
-        
-        const mintResult = await performMint(targetAddress, claimName);
+
+        const mintResult = await performMint(targetAddress, poapId);
         console.log("Final mint result:", JSON.stringify(mintResult, null, 2));
-        
+
         setMintResponse(mintResult);
       } else {
-        throw new Error("Email minting not supported yet. Please use an ENS domain or Ethereum address.");
+        throw new Error("Please use an ENS domain or Ethereum address.");
       }
-      
+
     } catch (error) {
       console.error("Error minting POAP:", error);
       alert(`Error: ${error.message}`);
@@ -182,7 +148,7 @@ function PoapClaim() {
     }
   };
 
-  if (loading) {
+  if (isLoadingPoap) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -191,14 +157,13 @@ function PoapClaim() {
     );
   }
 
-  if (error || !poapData) {
+  if (!isLoadingPoap && !poap) {
     return (
       <div className="error-container">
         <div className="error-icon">❌</div>
         <h2>POAP Not Found</h2>
-        <p>{error || "Unable to load POAP data"}</p>
-        {getClaimName() && (
-          <p className="error-details">Claim Name: {getClaimName()}</p>
+        {poapId && (
+          <p className="error-details">Claim Name: {poapId}</p>
         )}
         <p className="how-to">
           Please provide a claim name in the URL: ?claim=your-claim-name
@@ -240,11 +205,11 @@ function PoapClaim() {
               <div className="avatar">
                 <img
                   src={
-                    poapData?.image_url ||
-                    poapData?.image ||
+                    poap?.image_url ||
+                    poap?.image ||
                     "https://via.placeholder.com/150x150?text=POAP"
                   }
-                  alt={poapData?.name || "POAP"}
+                  alt={poap?.name || "POAP"}
                   className="avatar-image"
                   onError={(e) => {
                     console.log("Image failed to load:", e.target.src);
@@ -254,29 +219,26 @@ function PoapClaim() {
                 />
                 <div className="avatar-badge">
                   POAP
-                  <br />#{poapData?.id}
+                  <br />#{poap?.id}
                 </div>
               </div>
             </div>
             <div className="name-text">
               {extractNameFromTitle(
-                poapData?.name || poapData?.description || ""
+                poap?.name || poap?.description || ""
               )}
             </div>
           </div>
-
-          <div className="attendance-count left">#{poapData?.id}</div>
-          <div className="attendance-count right">POAP</div>
         </div>
       </div>
 
       <div className="main-content">
-        <h1>{poapData?.name || poapData?.description || "POAP Event"}</h1>
+        <h1>{poap?.name || poap?.description || "POAP Event"}</h1>
         <div className="date-info">
           📅{" "}
-          {poapData?.start_date ? formatDate(poapData.start_date) : "Date TBD"}
-          {poapData?.end_date && poapData.end_date !== poapData.start_date
-            ? ` - ${formatDate(poapData.end_date)}`
+          {poap?.start_date ? formatDate(poap.start_date) : "Date TBD"}
+          {poap?.end_date && poap.end_date !== poap.start_date
+            ? ` - ${formatDate(poap.end_date)}`
             : ""}
         </div>
 
@@ -286,8 +248,8 @@ function PoapClaim() {
             <input
               type="text"
               placeholder="Email, ENS or Ethereum address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={mintToWallet}
+              onChange={(e) => setMintToWallet(e.target.value)}
               className="email-input"
             />
             <button type="submit" className="mint-button" disabled={minting}>
@@ -296,7 +258,6 @@ function PoapClaim() {
           </form>
 
           <div className="mint-info">
-            <div className="gnosis-info">Mint for free on 🟢 Gnosis</div>
             <div className="terms">
               By minting this POAP, you accept POAP Inc's{" "}
               <a href="#" className="link">
@@ -331,24 +292,6 @@ function PoapClaim() {
           </div>
         </div>
       )}
-
-      <footer className="footer">
-        <div className="poap-logo">POAP</div>
-        <div className="copyright">© 2025 POAP Inc.</div>
-        <div className="footer-links">
-          <a href="#" className="footer-link">
-            Terms of Service
-          </a>
-          <span className="divider">|</span>
-          <a href="#" className="footer-link">
-            Privacy
-          </a>
-          <span className="divider">|</span>
-          <a href="#" className="footer-link">
-            Data Policy
-          </a>
-        </div>
-      </footer>
     </>
   );
 }

@@ -3,6 +3,7 @@ import "./App.css";
 import PoapClaim from "./components/PoapClaim";
 import Providers from './components/Providers';
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import { sepolia } from 'wagmi/chains';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { config } from './lib/wallet';
@@ -27,8 +28,9 @@ function App() {
                 <Header />
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/claim/:qrHash" element={<PoapClaim />} />
+                  <Route path="/claim/:id" element={<PoapClaim />} />
                 </Routes>
+                <Footer />
               </div>
             </div>
           </Router>
