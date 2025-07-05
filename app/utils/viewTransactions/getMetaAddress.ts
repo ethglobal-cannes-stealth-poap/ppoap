@@ -1,7 +1,7 @@
 // import { CHAIN_ID, config } from "../../lib/wallet";
-import { REGISTRY_ADDRESS } from "../../constants/contracts";
+// import { REGISTRY_ADDRESS } from "../../constants/contracts";
 // import REGISTRY_ABI from "@/constants/abi/registryAbi.json";
-import { createWalletClient } from "viem";
+// import { createWalletClient } from "viem";
 
 export const getMetaAddress = async ({ address }: { address: string }) => {
   // try {
