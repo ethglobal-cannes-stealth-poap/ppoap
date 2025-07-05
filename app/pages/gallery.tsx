@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Layout from "../components/layout";
 import axios from "axios";
+import { useRouter } from "next/router";
 
 interface POAP {
   tokenId: string;
@@ -32,6 +33,7 @@ interface AddressPOAPs {
 }
 
 export default function Gallery() {
+  const router = useRouter();
   const addresses = [
     "0xDB1B7053d9b2989712d97AAE36602d8B9ff59760",
     "0xbc60d23a20e39658543ad4e6f95870f5353a1551",
@@ -64,21 +66,27 @@ export default function Gallery() {
       const response = await axios.get(`/api/poap/address/${address}`);
       setAddressData((prev) => {
         const newData = [...prev];
-        newData[index] = {
-          ...newData[index],
-          poaps: response.data,
-          loading: false,
-        };
+        if (newData[index]) {
+          newData[index] = {
+            address: address,
+            poaps: response.data,
+            loading: false,
+            error: null,
+          };
+        }
         return newData;
       });
     } catch (error) {
       setAddressData((prev) => {
         const newData = [...prev];
-        newData[index] = {
-          ...newData[index],
-          error: "Failed to fetch POAPs",
-          loading: false,
-        };
+        if (newData[index]) {
+          newData[index] = {
+            address: address,
+            poaps: [],
+            error: "Failed to fetch POAPs",
+            loading: false,
+          };
+        }
         return newData;
       });
     }
@@ -139,7 +147,8 @@ export default function Gallery() {
                     {data.poaps.map((poap) => (
                       <div
                         key={poap.tokenId}
-                        className="card card-compact bg-base-100 shadow-xl"
+                        className="card card-compact bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow"
+                        onClick={() => router.push(`/poap/${poap.tokenId}`)}
                       >
                         <figure className="px-4 pt-4">
                           <img

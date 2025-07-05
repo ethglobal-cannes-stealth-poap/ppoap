@@ -450,6 +450,12 @@ body {
   margin-bottom: 30px;
 }
 
+.collect-section {
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+}
+
 .collect-section h2 {
   font-size: 22px;
   color: #7c4dff;
@@ -463,6 +469,66 @@ body {
 
 .mint-form button[type="button"] {
   margin-bottom: 16px;
+}
+
+.tab-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  border-radius: 12px;
+  background: #f5f5f5;
+  padding: 4px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #666;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  background: white;
+  color: #ff7f00;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.private-mint-section {
+  text-align: center;
+  width: 100%;
+}
+
+.anon-address-display {
+  background: #f8f8f8;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.anon-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.anon-address {
+  font-size: 14px;
+  font-family: monospace;
+  color: #2c3e50;
+  word-break: break-all;
+  font-weight: 600;
 }
 
 .address-input {
