@@ -24,12 +24,12 @@ export default function HomePage() {
               placeholder="Enter your minting name"
               value={mintingName}
               onChange={(e) => setMintingName(e.target.value)}
-              className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
             />
             
             {mintingName.trim() && (
               <Link href={`/claim/${encodeURIComponent(mintingName.trim())}`}>
-                <button className="w-full bg-orange-500 hover:bg-orange-600 py-3 px-6 text-white text-lg rounded-lg transition-colors mt-6">
+                <button className="w-full bg-cyan-400 hover:bg-cyan-500 py-3 px-6 text-white text-lg rounded-lg transition-colors mt-6">
                   Go to Minting Page
                 </button>
               </Link>

@@ -289,10 +289,6 @@ function PoapClaim({ poapId, mintToAddress, setMintToAddress }: PoapClaimProps) 
                 alt={poap?.name || "POAP"}
                 className="avatar-image"
               />
-              <div className="avatar-badge">
-                POAP
-                <br />#{poap?.id}
-              </div>
             </div>
           </div>
         </div>

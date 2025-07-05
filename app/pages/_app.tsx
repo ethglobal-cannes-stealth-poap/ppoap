@@ -19,6 +19,8 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
+        <meta name="color-scheme" content="light" />
+        <meta name="theme-color" content="#ffffff" />
         <link
           rel="preload"
           href="/fonts/AdelleSans-Regular.woff"
