@@ -8,20 +8,20 @@ export const setMetaStealthAddress = async ({
 }: {
   stealthMetaAddress: string;
 }) => {
-    const { writeContract } = useWriteContract()
+  const { writeContract } = useWriteContract();
 
-    try {
-        const result = await writeContract({
-            address: REGISTRY_ADDRESS,
-            abi: REGISTRY_ABI,
-            functionName: "registerKeys",
-            args: [BigInt(1), stealthMetaAddress],
-        });
-        
-        toast.success("Successfully registered meta address.");
-        return result;
-    } catch (error: any) {
-        toast.error("Something went wrong");
-        throw error;
-    }
+  try {
+    const result = await writeContract({
+      address: REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: "registerKeys",
+      args: [BigInt(1), stealthMetaAddress],
+    });
+
+    toast.success("Successfully registered meta address.");
+    return result;
+  } catch (error: any) {
+    toast.error("Something went wrong");
+    throw error;
+  }
 };

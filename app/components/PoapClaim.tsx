@@ -10,7 +10,6 @@ import { setMetaStealthAddress } from "../utils/writeTransactions/setMetaStealth
 import { StealthAddressInfo } from "../types";
 import { generateStealthAddress } from "../utils/stealth-address";
 import { getItem, getKey, setItem } from "../lib/userDb";
-import { useConnectWallet } from '@privy-io/react-auth';
 import { PoapClaimFullForm } from "./PoapClaimFullForm";
 import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
 import { cleanLongBoii } from "../utils/format";
@@ -32,29 +31,14 @@ interface MintResponse {
 
 interface PoapClaimProps {
   poapId: string
-  // metaAddressInfo?: {
-  //   stealthMetaAddress: string
-  //   spendingPrivateKey: string
-  //   viewingPrivateKey: string
-  //   spendingPublicKey: string
-  //   viewingPublicKey: string
-  //   viewTag: string
-  //   credentialUsed: string
-  // } | null;
-  // setUpPasskeys: () => void;
 }
 
 const longBoiEmpty = "st:eth:0x";
 
-function PoapClaim({
-  poapId,
-  // metaAddressInfo,
-  // setUpPasskeys,
-}: PoapClaimProps) {
+function PoapClaim({ poapId }: PoapClaimProps) {
   const [ens, setEns] = useState("");
   const [mintResponse, setMintResponse] = useState<MintResponse | null>(null);
   const { writeContract } = useWriteContract()
-  const { connectWallet } = useConnectWallet();
   const [startBroadcasting, setStartBroadcasting] = useState(false);
 
   const [resolvedStealthAddressInfo, setResolvedStealthAddressInfo] = useState<StealthAddressInfo | null>(null);
@@ -127,10 +111,11 @@ function PoapClaim({
 
   const { mutate: setMetaAddy } = useMutation({
     mutationFn: async (stealthMetaAddress: string) => {
+      console.log("calling setMetaAddy");
       if (!stealthMetaAddress) {
         throw new Error("No stealth meta address provided");
       }
-
+      console.log("passed the if");
       const res = await setMetaStealthAddress({ stealthMetaAddress });
       console.log("Meta address set successfully:", res);
     },
@@ -144,19 +129,18 @@ function PoapClaim({
       return metaAddressInfo.stealthMetaAddress;
     }
 
-    console.log("stealthMetaAddress", stealthMetaAddress)
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
-  const isInRegistry = useMemo(() => {
+  const hasLongBoii = useMemo(() => {
     return !!resolvedStealthMetaAddress && cleanLongBoii(resolvedStealthMetaAddress) !== longBoiEmpty;
   }, [resolvedStealthMetaAddress]);
 
   useEffect(() => {
-    if (!isInRegistry && !!resolvedStealthMetaAddress) {
+    if (!hasLongBoii && !!resolvedStealthMetaAddress) {
       setMetaAddy(resolvedStealthMetaAddress as string)
     }
-  }, [isInRegistry, resolvedStealthMetaAddress, setMetaAddy]);
+  }, [hasLongBoii, resolvedStealthMetaAddress, setMetaAddy]);
 
   const announceStealthAddressMint = async (stealthAddress: string, ephemeralPubKey: string, metadata: string) => {
     const res = await writeContract({
@@ -265,13 +249,13 @@ function PoapClaim({
 
   const { mutate: setUpPasskeys } = useMutation({
     mutationFn: async () => {
-      console.log("Generating stealth address...");
       const data = await initializeStealthAddress()
       setMetaAddressInfo(data)
-      console.log("data.stealthMetaAddress", data.stealthMetaAddress);
+
       const stealthAddressData = await generateStealthAddress(data.stealthMetaAddress)
-      console.log("stealthAddressData", stealthAddressData);
       setResolvedStealthAddressInfo(stealthAddressData)
+
+      setMetaAddy(data.stealthMetaAddress);
     },
     onSuccess: () => {
       toast.success("Passkeys are ready.");
@@ -377,7 +361,7 @@ function PoapClaim({
               <PoapClaimFullForm
                 ens={ens}
                 setEns={setEns}
-                isInRegistry={isInRegistry}
+                isInRegistry={hasLongBoii}
                 generateStealthAddressMutation={generateStealthAddressMutation}
                 resolvedStealthMetaAddress={resolvedStealthMetaAddress}
                 resolvedStealthAddressInfo={resolvedStealthAddressInfo}

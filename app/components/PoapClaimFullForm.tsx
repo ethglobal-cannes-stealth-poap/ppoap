@@ -1,3 +1,4 @@
+import { useConnectWallet, useWallets } from "@privy-io/react-auth";
 import { UseMutateFunction } from "@tanstack/react-query";
 
 interface PoapClaimFullFormProps {
@@ -21,8 +22,10 @@ export const PoapClaimFullForm = ({
   mintPoapMutation,
   setUpPasskeys
 }: PoapClaimFullFormProps) => {
+  const { connectWallet } = useConnectWallet();
+  const { wallets } = useWallets();
+  const address = wallets?.[0]?.address;
 
-  console.log("isInRegistry", isInRegistry);
   return (
     <div className="mint-form">
       <input
@@ -45,12 +48,21 @@ export const PoapClaimFullForm = ({
           <>
             <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
 
-            <button
-              className="mint-button"
-              onClick={() => setUpPasskeys()}
-            >
-              Set up stealth account
-            </button>
+            {!address ? (
+              <button
+                className="mint-button"
+                onClick={() => connectWallet()}
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <button
+                className="mint-button"
+                onClick={() => setUpPasskeys()}
+              >
+                Set up stealth account
+              </button>
+            )}
           </>
         )
       }
@@ -86,6 +98,6 @@ export const PoapClaimFullForm = ({
           </>
         )
       }
-    </div>
+    </div >
   )
 }
