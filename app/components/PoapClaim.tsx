@@ -10,9 +10,12 @@ import { setMetaStealthAddress } from "../utils/writeTransactions/setMetaStealth
 import { StealthAddressInfo } from "../types";
 import { generateStealthAddress } from "../utils/stealth-address";
 import { getItem, getKey, setItem } from "../lib/userDb";
-import {useConnectWallet} from '@privy-io/react-auth';
+import { useConnectWallet } from '@privy-io/react-auth';
 import { PoapClaimFullForm } from "./PoapClaimFullForm";
 import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
+import { cleanLongBoii } from "../utils/format";
+import { initializeStealthAddress } from "../utils/pass-keys";
+import toast from "react-hot-toast";
 
 const schemaId = 1;
 
@@ -29,22 +32,24 @@ interface MintResponse {
 
 interface PoapClaimProps {
   poapId: string
-  metaAddressInfo?: {
-    stealthMetaAddress: string
-    spendingPrivateKey: string
-    viewingPrivateKey: string
-    spendingPublicKey: string
-    viewingPublicKey: string
-    viewTag: string
-    credentialUsed: string
-  } | null;
-  setUpPasskeys: () => void;
+  // metaAddressInfo?: {
+  //   stealthMetaAddress: string
+  //   spendingPrivateKey: string
+  //   viewingPrivateKey: string
+  //   spendingPublicKey: string
+  //   viewingPublicKey: string
+  //   viewTag: string
+  //   credentialUsed: string
+  // } | null;
+  // setUpPasskeys: () => void;
 }
+
+const longBoiEmpty = "st:eth:0x";
 
 function PoapClaim({
   poapId,
-  metaAddressInfo,
-  setUpPasskeys,
+  // metaAddressInfo,
+  // setUpPasskeys,
 }: PoapClaimProps) {
   const [ens, setEns] = useState("");
   const [mintResponse, setMintResponse] = useState<MintResponse | null>(null);
@@ -53,6 +58,15 @@ function PoapClaim({
   const [startBroadcasting, setStartBroadcasting] = useState(false);
 
   const [resolvedStealthAddressInfo, setResolvedStealthAddressInfo] = useState<StealthAddressInfo | null>(null);
+  const [metaAddressInfo, setMetaAddressInfo] = useState<{
+    stealthMetaAddress: string;
+    spendingPrivateKey: string;
+    viewingPrivateKey: string;
+    spendingPublicKey: string;
+    viewingPublicKey: string;
+    viewTag: string;
+    credentialUsed: string;
+  } | null>(null);
 
   const { data: ensAddress } = useEnsAddress({
     name: ens.trim(),
@@ -122,21 +136,20 @@ function PoapClaim({
     },
   });
 
+  // look into logic ere
   const { data: stealthMetaAddress } = useReadMetaAddress({ address: ensAddress as string });
 
   const resolvedStealthMetaAddress = useMemo(() => {
     if (metaAddressInfo?.stealthMetaAddress) {
       return metaAddressInfo.stealthMetaAddress;
     }
+
     console.log("stealthMetaAddress", stealthMetaAddress)
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
   const isInRegistry = useMemo(() => {
-    if (resolvedStealthMetaAddress.includes("undefined")) {
-      return false;
-    }
-    return !!resolvedStealthMetaAddress;
+    return !!resolvedStealthMetaAddress && cleanLongBoii(resolvedStealthMetaAddress) !== longBoiEmpty;
   }, [resolvedStealthMetaAddress]);
 
   useEffect(() => {
@@ -152,8 +165,7 @@ function PoapClaim({
       functionName: "announce",
       args: [schemaId, stealthAddress, ephemeralPubKey, metadata],
     })
-
-    debugger
+    console.log("res", res);
   }
 
   const performMint = async (address: string) => {
@@ -174,45 +186,45 @@ function PoapClaim({
 
       // return response.data;
       return {
-          "id": 33832632,
-          "qr_hash": "6mc0mz",
-          "tx_hash": "",
-          "event_id": 191497,
-          "beneficiary": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
-          "user_input": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
-          "signer": "",
-          "claimed": true,
-          "claimed_date": "2025-07-06T02:05:05.986Z",
-          "created_date": "2025-07-06T02:05:05.962Z",
-          "is_active": true,
-          "event": {
-              "id": 191497,
-              "fancy_id": "ethcc-p-poap-2025",
-              "name": "EthCC P-POAP",
-              "description": "This is the first fully private POAP minted to the stealth address",
-              "location_type": "IN_PERSON",
-              "city": "Cannes",
-              "country": "France",
-              "channel": "",
-              "platform": "",
-              "event_url": "https://ethglobal.com",
-              "image_url": "https://assets.poap.xyz/e7eba34e-a527-42d8-ae23-1d6e163a6213.png",
-              "animation_url": "",
-              "year": 2025,
-              "start_date": "04-Jul-2025",
-              "end_date": "07-Jul-2025",
-              "expiry_date": "07-Jul-2026",
-              "timezone": "Europe/Paris",
-              "from_admin": false,
-              "virtual_event": false,
-              "event_template_id": null,
-              "private_event": false,
-              "minting_config": {
-                  "mint_animation_url": "https://s3.us-east-2.amazonaws.com/assets.poap.xyz/ethglobal_minting_animation_2025.riv"
-              }
-          },
-          "delegated_mint": false,
-          "delegated_signed_message": ""
+        "id": 33832632,
+        "qr_hash": "6mc0mz",
+        "tx_hash": "",
+        "event_id": 191497,
+        "beneficiary": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
+        "user_input": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
+        "signer": "",
+        "claimed": true,
+        "claimed_date": "2025-07-06T02:05:05.986Z",
+        "created_date": "2025-07-06T02:05:05.962Z",
+        "is_active": true,
+        "event": {
+          "id": 191497,
+          "fancy_id": "ethcc-p-poap-2025",
+          "name": "EthCC P-POAP",
+          "description": "This is the first fully private POAP minted to the stealth address",
+          "location_type": "IN_PERSON",
+          "city": "Cannes",
+          "country": "France",
+          "channel": "",
+          "platform": "",
+          "event_url": "https://ethglobal.com",
+          "image_url": "https://assets.poap.xyz/e7eba34e-a527-42d8-ae23-1d6e163a6213.png",
+          "animation_url": "",
+          "year": 2025,
+          "start_date": "04-Jul-2025",
+          "end_date": "07-Jul-2025",
+          "expiry_date": "07-Jul-2026",
+          "timezone": "Europe/Paris",
+          "from_admin": false,
+          "virtual_event": false,
+          "event_template_id": null,
+          "private_event": false,
+          "minting_config": {
+            "mint_animation_url": "https://s3.us-east-2.amazonaws.com/assets.poap.xyz/ethglobal_minting_animation_2025.riv"
+          }
+        },
+        "delegated_mint": false,
+        "delegated_signed_message": ""
       }
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
@@ -250,6 +262,21 @@ function PoapClaim({
       }
     }
   })
+
+  const { mutate: setUpPasskeys } = useMutation({
+    mutationFn: async () => {
+      console.log("Generating stealth address...");
+      const data = await initializeStealthAddress()
+      setMetaAddressInfo(data)
+      console.log("data.stealthMetaAddress", data.stealthMetaAddress);
+      const stealthAddressData = await generateStealthAddress(data.stealthMetaAddress)
+      console.log("stealthAddressData", stealthAddressData);
+      setResolvedStealthAddressInfo(stealthAddressData)
+    },
+    onSuccess: () => {
+      toast.success("Passkeys are ready.");
+    }
+  });
 
   const generateStealthAddressMutation = useMutation({
     mutationFn: async (stealthMetaAddress: string) => {
@@ -355,6 +382,7 @@ function PoapClaim({
                 resolvedStealthMetaAddress={resolvedStealthMetaAddress}
                 resolvedStealthAddressInfo={resolvedStealthAddressInfo}
                 mintPoapMutation={mintPoapMutation}
+                setUpPasskeys={setUpPasskeys}
               />
             )
           }
