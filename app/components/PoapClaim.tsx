@@ -9,6 +9,7 @@ import Contract5564 from "../constants/abi/5564.json"
 import { setMetaStealthAddress } from "../utils/writeTransactions/setMetaStealthAddress";
 import { StealthAddressInfo } from "../types";
 import { generateStealthAddress } from "../utils/stealth-address";
+import { getItem, getKey, setItem } from "../lib/userDb";
 
 const schemaId = 1;
 
@@ -123,7 +124,6 @@ function PoapClaim({
       return metaAddressInfo.stealthMetaAddress;
     }
     console.log("stealthMetaAddress", stealthMetaAddress)
-    debugger
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
@@ -179,10 +179,22 @@ function PoapClaim({
       }
 
       const response = await performMint(reciever);
-      debugger
       if (response.status === "success") {
         await announceStealthAddressMint(resolvedStealthAddressInfo.stealthAddress, resolvedStealthAddressInfo.ephemeralPublicKey, resolvedStealthAddressInfo.viewTag);
         setMintResponse(response);
+
+        if (!metaAddressInfo?.stealthMetaAddress) {
+          console.error("Meta address info is not provided. Cannot store stealth address.");
+          return
+        }
+
+        const key = getKey(metaAddressInfo?.stealthMetaAddress)
+        const addresses = getItem<string[]>(key) || [];
+        console.log("Current addresses in localStorage:", addresses);
+        setItem(key, [
+          ...addresses,
+          resolvedStealthAddressInfo.stealthAddress.toLowerCase(),
+        ]);
       }
     }
   })
@@ -194,7 +206,6 @@ function PoapClaim({
       }
 
       const data = await generateStealthAddress(stealthMetaAddress)
-      debugger
       setResolvedStealthAddressInfo(data)
     },
   })
