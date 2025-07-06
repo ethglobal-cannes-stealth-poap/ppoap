@@ -45,10 +45,10 @@ interface PoapClaimProps {
   generateStealthAddress: () => void;
 }
 
-function PoapClaim({ 
-  poapId, 
-  mintToAddress, 
-  stealthAddressInfo, 
+function PoapClaim({
+  poapId,
+  mintToAddress,
+  stealthAddressInfo,
   metaAddressInfo,
   generateStealthAddress,
 }: PoapClaimProps) {
@@ -137,7 +137,6 @@ function PoapClaim({
         toast.success("Meta address registered successfully!");
       } catch (err: any) {
         console.error("Error setting meta address:", err);
-        toast.error(`Failed to register meta address: ${err.message}`);
       }
     },
   });
@@ -156,7 +155,6 @@ function PoapClaim({
 
       try {
         const isRegistered = await getMetaAddress({ address: ensAddress });
-        debugger
 
         return isRegistered;
       } catch (err: any) {
@@ -177,12 +175,12 @@ function PoapClaim({
   console.log("isInRegistry", isInRegistry, ensAddress);
 
   const announceStealthAddressMint = async (stealthAddress: string, ephemeralPubKey: string, metadata: string) => {
-      await writeContract({
-        abi: Contract5564,
-        address: ANNOUNCE_CONTRACT_ADDRESS,
-        functionName: "announce",
-        args: [schemaId, stealthAddress, ephemeralPubKey, metadata],
-      })
+    await writeContract({
+      abi: Contract5564,
+      address: ANNOUNCE_CONTRACT_ADDRESS,
+      functionName: "announce",
+      args: [schemaId, stealthAddress, ephemeralPubKey, metadata],
+    })
   }
 
   const performMint = async (address: string) => {
@@ -266,7 +264,8 @@ function PoapClaim({
         } else {
           throw new Error("No stealth address info provided. Please generate an anon address first.");
         }
-        alert("Minted successfully!");
+
+        toast.success("Minted successfully!");
       } else {
         throw new Error("Please use an ENS domain or Ethereum address.");
       }
@@ -370,7 +369,7 @@ function PoapClaim({
               className="address-input"
             />
 
-            
+
             {isInRegistry ? <>
               <p className="claim-page__all-good">
                 Your meta-stealth address is set up. You are all good to go!
