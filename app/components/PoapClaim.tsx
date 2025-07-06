@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import MintResponse from "./MintResponse";
-import toast from "react-hot-toast";
-import { useWallets } from "@privy-io/react-auth";
-import { getMetaAddress } from "../utils/viewTransactions/getMetaAddress";
-import { setMetaAddress } from "../utils/writeTransactions/setMetaAddress";
+import { useReadMetaAddress } from "../utils/viewTransactions/getMetaAddress";
 import { useEnsAddress, useWriteContract } from "wagmi";
 import { ANNOUNCE_CONTRACT_ADDRESS } from "../constants/contracts";
 import Contract5564 from "../constants/abi/5564.json"
-
+import { setMetaStealthAddress } from "../utils/writeTransactions/setMetaStealthAddress";
+import { StealthAddressInfo } from "../types";
+import { generateStealthAddress } from "../utils/stealth-address";
 
 const schemaId = 1;
 
@@ -26,12 +25,6 @@ interface MintResponse {
 
 interface PoapClaimProps {
   poapId: string
-  mintToAddress?: string;
-  stealthAddressInfo?: {
-    stealthAddress: string;
-    ephemeralPubKey: string;
-    metadata: string;
-  } | null;
   metaAddressInfo?: {
     stealthMetaAddress: string
     spendingPrivateKey: string
@@ -41,21 +34,19 @@ interface PoapClaimProps {
     viewTag: string
     credentialUsed: string
   } | null;
-
-  generateStealthAddress: () => void;
+  setUpPasskeys: () => void;
 }
 
 function PoapClaim({
   poapId,
-  mintToAddress,
-  stealthAddressInfo,
   metaAddressInfo,
-  generateStealthAddress,
+  setUpPasskeys,
 }: PoapClaimProps) {
   const [ens, setEns] = useState("");
-  const [minting, setMinting] = useState(false);
   const [mintResponse, setMintResponse] = useState<MintResponse | null>(null);
   const { writeContract } = useWriteContract()
+
+  const [resolvedStealthAddressInfo, setResolvedStealthAddressInfo] = useState<StealthAddressInfo | null>(null);
 
   const { data: ensAddress } = useEnsAddress({
     name: ens.trim(),
@@ -64,9 +55,6 @@ function PoapClaim({
       enabled: !!ens.endsWith('.eth') && !!ens.trim() && ens.trim() !== "",
     }
   })
-
-  const { wallets } = useWallets();
-  const wallet = wallets[0];
 
   const { data: poap, isLoading: isLoadingPoap } = useQuery({
     queryKey: ["poap", poapId],
@@ -117,62 +105,37 @@ function PoapClaim({
     },
   });
 
-  const { mutate: setMetaAddy, isPending: isSettingMetaAddress } = useMutation({
-    mutationFn: async (isInRegistry: boolean) => {
-      try {
-        if (!wallet) {
-          throw new Error("No wallet connected");
-        }
-
-        if (!metaAddressInfo?.stealthMetaAddress) {
-          throw new Error("No stealth meta address provided");
-        }
-
-        if (isInRegistry === false) {
-          toast.error("This address is not registered in the Meta registry. Please register it first.");
-          const res = await setMetaAddress({ wallet, stealthMetaAddress: metaAddressInfo?.stealthMetaAddress });
-          console.log("Meta address set successfully:", res);
-        }
-
-        toast.success("Meta address registered successfully!");
-      } catch (err: any) {
-        console.error("Error setting meta address:", err);
+  const { mutate: setMetaAddy } = useMutation({
+    mutationFn: async (stealthMetaAddress: string) => {
+      if (!stealthMetaAddress) {
+        throw new Error("No stealth meta address provided");
       }
+
+      const res = await setMetaStealthAddress({ stealthMetaAddress });
+      console.log("Meta address set successfully:", res);
     },
   });
 
-  const { data: isInRegistry = false, isLoading: isCheckingRegistry } = useQuery({
-    queryKey: ["isRegistered", ensAddress],
-    queryFn: async () => {
-      if (!ensAddress) {
-        throw new Error("No mintToAddress provided");
-      }
-      if (!wallet) {
-        throw new Error("No wallet connected");
-      }
+  const { data: stealthMetaAddress } = useReadMetaAddress({ address: ensAddress as string });
 
-      console.log("Figuring out if " + ensAddress + " is in the registry");
+  const resolvedStealthMetaAddress = useMemo(() => {
+    if (metaAddressInfo?.stealthMetaAddress) {
+      return metaAddressInfo.stealthMetaAddress;
+    }
+    console.log("stealthMetaAddress", stealthMetaAddress)
+    debugger
+    return `st:eth:${stealthMetaAddress}`;
+  }, [metaAddressInfo, stealthMetaAddress]);
 
-      try {
-        const isRegistered = await getMetaAddress({ address: ensAddress });
-
-        return isRegistered;
-      } catch (err: any) {
-        console.log("Registry check error:", err.response?.data || err.message);
-        toast.error("Failed to check registry status");
-      }
-    },
-    enabled: !!ensAddress && !!wallet,
-    staleTime: Infinity
-  });
+  const isInRegistry = useMemo(() => {
+    return !!resolvedStealthMetaAddress;
+  }, [resolvedStealthMetaAddress]);
 
   useEffect(() => {
-    if (!isInRegistry && !!stealthAddressInfo) {
-      setMetaAddy(false)
+    if (!isInRegistry && !!resolvedStealthMetaAddress) {
+      setMetaAddy(resolvedStealthMetaAddress as string)
     }
-  }, [isInRegistry, stealthAddressInfo, setMetaAddy]);
-
-  console.log("isInRegistry", isInRegistry, ensAddress);
+  }, [isInRegistry, resolvedStealthMetaAddress, setMetaAddy]);
 
   const announceStealthAddressMint = async (stealthAddress: string, ephemeralPubKey: string, metadata: string) => {
     await writeContract({
@@ -209,73 +172,32 @@ function PoapClaim({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const reciever = mintToAddress;
-    const mintToWallet = reciever;
-
-    if (!mintToWallet?.trim()) {
-      toast.error("Please enter an ENS or Ethereum address");
-      return;
-    }
-
-    setMinting(true);
-    setMintResponse(null);
-
-    try {
-      const isEns = mintToWallet.includes(".eth");
-      const isEthAddress = /^0x[a-fA-F0-9]{40}$/.test(mintToWallet.trim());
-      const isEnsOrAddress = isEns || isEthAddress;
-
-      console.log("Input validation:", {
-        input: mintToWallet.trim(),
-        isEns,
-        isEthAddress,
-        isEnsOrAddress,
-      });
-
-      let targetAddress = null;
-
-      if (isEnsOrAddress) {
-        if (isEns) {
-          const profileResponse = await axios.get(
-            `/api/poap/profile?ens=${mintToWallet.trim()}`
-          );
-
-          if (profileResponse.status !== 200) {
-            throw new Error("Invalid ENS domain or ENS not found");
-          }
-
-          const profileData = profileResponse.data;
-          targetAddress = profileData.address;
-
-          if (!targetAddress) {
-            throw new Error("No address found for the provided ENS");
-          }
-        } else {
-          console.log(mintToAddress);
-          targetAddress = mintToAddress;
-        }
-
-        if (stealthAddressInfo) {
-          await announceStealthAddressMint(stealthAddressInfo.stealthAddress, stealthAddressInfo.ephemeralPubKey, stealthAddressInfo.metadata);
-          generateStealthAddress();
-        } else {
-          throw new Error("No stealth address info provided. Please generate an anon address first.");
-        }
-
-        toast.success("Minted successfully!");
-      } else {
-        throw new Error("Please use an ENS domain or Ethereum address.");
+  const mintPoapMutation = useMutation({
+    mutationFn: async (reciever: string) => {
+      if (!resolvedStealthAddressInfo) {
+        throw new Error("No stealth address info provided. Please generate an anon address first.");
       }
-    } catch (error: any) {
-      console.error("Error minting POAP:", error);
-      toast.error(`Error: ${error.message}`);
-    } finally {
-      setMinting(false);
+
+      const response = await performMint(reciever);
+      debugger
+      if (response.status === "success") {
+        await announceStealthAddressMint(resolvedStealthAddressInfo.stealthAddress, resolvedStealthAddressInfo.ephemeralPublicKey, resolvedStealthAddressInfo.viewTag);
+        setMintResponse(response);
+      }
     }
-  };
+  })
+
+  const generateStealthAddressMutation = useMutation({
+    mutationFn: async (stealthMetaAddress: string) => {
+      if (!stealthMetaAddress) {
+        throw new Error("No stealth meta address provided");
+      }
+
+      const data = await generateStealthAddress(stealthMetaAddress)
+      debugger
+      setResolvedStealthAddressInfo(data)
+    },
+  })
 
   if (isLoadingPoap) {
     return (
@@ -360,7 +282,7 @@ function PoapClaim({
         </div>
 
         <div className="collect-section">
-          <form onSubmit={handleSubmit} className="mint-form">
+          <div className="mint-form">
             <input
               type="text"
               placeholder="ENS or Ethereum address"
@@ -381,19 +303,41 @@ function PoapClaim({
                 <>
                   <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
 
-                  <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddress()}>Sound great</button>
+                  <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}>Sound great</button>
                 </>
+              )
+            }
+
+            {
+              isInRegistry && (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <input
+                    type="text"
+                    placeholder="Generated stealth address"
+                    value={resolvedStealthAddressInfo?.stealthAddress}
+                    className="address-input"
+                  />
+
+                  <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}
+                  >
+                    🔄
+                  </div>
+
+                </div>
               )
             }
 
             <button
               type="submit"
               className="mint-button"
-              disabled={minting || !mintToAddress}
+              onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
+              disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress}
             >
-              {minting ? "Minting..." : "Mint now"}
+              {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
             </button>
-          </form>
+          </div>
         </div>
       </div>
 

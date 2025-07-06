@@ -4,18 +4,11 @@ import PoapClaim from '../../components/PoapClaim';
 import { useState } from 'react';
 import { initializeStealthAddress } from "../../utils/pass-keys";
 import toast from "react-hot-toast";
-import { generateStealthAddress } from "../../utils/stealth-address";
 import { useMutation } from "@tanstack/react-query";
 
 export default function Page() {
   const router = useRouter()
   const { id } = router.query;
-
-  const [stealthAddressInfo, setStealthAddressInfo] = useState<{
-    stealthAddress: string;
-    ephemeralPubKey: string;
-    metadata: string;
-  } | null>(null);
 
   const [metaAddressInfo, setMetaAddressInfo] = useState<{
     stealthMetaAddress: string;
@@ -27,22 +20,14 @@ export default function Page() {
     credentialUsed: string;
   } | null>(null);
 
-  const mintToAddress = stealthAddressInfo?.stealthAddress;
-
-  const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
+  const { mutate: setUpPasskeys } = useMutation({
     mutationFn: async () => {
       console.log("Generating stealth address...");
       const data = await initializeStealthAddress()
-
-      const stealthAddress = await generateStealthAddress(data.stealthMetaAddress)
-
-      setStealthAddressInfo({
-        stealthAddress: stealthAddress.stealthAddress,
-        ephemeralPubKey: stealthAddress.ephemeralPublicKey,
-        metadata: stealthAddress.ViewTag,
-      });
       setMetaAddressInfo(data)
-      toast.success("Anon address generated successfully!");
+    },
+    onSuccess: () => {
+      toast.success("Passkeys are ready.");
     }
   });
 
@@ -52,7 +37,7 @@ export default function Page() {
 
   return (
     <Layout >
-      <PoapClaim poapId={id as string} mintToAddress={mintToAddress} stealthAddressInfo={stealthAddressInfo} metaAddressInfo={metaAddressInfo} generateStealthAddress={generateStealthAddy} />
+      <PoapClaim poapId={id as string} setUpPasskeys={setUpPasskeys} metaAddressInfo={metaAddressInfo} />
     </Layout>
   )
 }

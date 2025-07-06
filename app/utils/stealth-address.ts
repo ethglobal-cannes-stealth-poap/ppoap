@@ -44,5 +44,5 @@ export const generateStealthAddress = async (stealthMetaAddress: string) => {
   // console.log("stealthPublicKey.toHex(): ", stealthPublicKey.toHex());
   const stealthAddress = toEthAddress(stealthPublicKey.toHex());
   // console.log('stealth address:', stealthAddress);
-  return {"stealthAddress":stealthAddress, "ephemeralPublicKey":"0x"+Buffer.from(ephemeralPublicKey).toString('hex'), "ViewTag":"0x"+ViewTag};
+  return {"stealthAddress":stealthAddress, "ephemeralPublicKey":"0x"+Buffer.from(ephemeralPublicKey).toString('hex'), "viewTag":"0x"+ViewTag};
 };
