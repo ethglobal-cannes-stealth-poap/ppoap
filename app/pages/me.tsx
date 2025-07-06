@@ -196,7 +196,7 @@ export default function Gallery() {
             )}
 
             <div className="poap-gallery">
-              {addressData?.map((data, index) => (
+              {addressData?.filter((data) => data.poaps.length > 0)?.map((data, index) => (
                 <div
                   key={data.address}
                   className="address-section-card"
