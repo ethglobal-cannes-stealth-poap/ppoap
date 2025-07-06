@@ -124,7 +124,7 @@ function PoapClaim({ poapId }: PoapClaimProps) {
 
     console.log("stealthMetaAddress", stealthMetaAddress)
     if (!stealthMetaAddress) {
-      return undefined
+      return '0x'
     }
 
     return `st:eth:${stealthMetaAddress}`;
