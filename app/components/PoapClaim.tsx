@@ -12,10 +12,8 @@ import { generateStealthAddress } from "../utils/stealth-address";
 import { getItem, getKey, setItem } from "../lib/userDb";
 import { PoapClaimFullForm } from "./PoapClaimFullForm";
 import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
-import { cleanLongBoii } from "../utils/format";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
-import { isAddress } from "viem";
 
 const schemaId = 1;
 
@@ -33,8 +31,6 @@ interface MintResponse {
 interface PoapClaimProps {
   poapId: string
 }
-
-const longBoiEmpty = "st:eth:0x";
 
 function PoapClaim({ poapId }: PoapClaimProps) {
   const [ens, setEns] = useState("");
