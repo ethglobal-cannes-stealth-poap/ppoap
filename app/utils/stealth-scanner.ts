@@ -16,7 +16,7 @@ import { getAnouncements } from './viewTransactions/getAnouncements';
 // }
 
 // Helper to convert a hex string to a Uint8Array
-const hexToBytes = (hex) => {
+const hexToBytes = (hex: string) => {
   if (hex.startsWith('0x')) {
     hex = hex.slice(2);
   }
