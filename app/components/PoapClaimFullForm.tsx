@@ -16,14 +16,14 @@ interface PoapClaimFullFormProps {
 }
 
 export const PoapClaimFullForm = ({
-    ens,
-    setEns,
-    isInRegistry,
-    generateStealthAddressMutation,
-    resolvedStealthMetaAddress,
-    resolvedStealthAddressInfo,
-    mintPoapMutation,
-    setUpPasskeys,
+  ens,
+  setEns,
+  isInRegistry,
+  generateStealthAddressMutation,
+  resolvedStealthMetaAddress,
+  resolvedStealthAddressInfo,
+  mintPoapMutation,
+  setUpPasskeys,
 }: PoapClaimFullFormProps) => {
   const { connectWallet } = useConnectWallet();
   const { wallets } = useWallets();
@@ -31,7 +31,7 @@ export const PoapClaimFullForm = ({
 
 
   const isValidInput = useMemo(() => {
-      return isAddress(ens) || ens.endsWith('.eth');
+    return isAddress(ens) || ens.endsWith('.eth');
   }, [ens])
 
   return (
@@ -45,16 +45,16 @@ export const PoapClaimFullForm = ({
       />
 
 
-        {isInRegistry && isValidInput ? <>
-          <p className="claim-page__all-good">
-            Your meta-stealth address is set up. You are all good to go!
-          </p>
-        </> : ' '}
+      {isInRegistry && isValidInput ? <>
+        <p className="claim-page__all-good">
+          Your meta-stealth address is set up. You are all good to go!
+        </p>
+      </> : ' '}
 
-        {
-          !isInRegistry && isValidInput && (
-            <>
-              <p className="claim-page__not-registered">Your meta-stealth address is not set up.</p>
+      {
+        !isInRegistry && isValidInput && (
+          <>
+            <p className="claim-page__not-registered">Your meta-stealth address is not set up.</p>
 
             {!address ? (
               <button
@@ -75,35 +75,35 @@ export const PoapClaimFullForm = ({
         )
       }
 
-        {
-          isInRegistry && isValidInput && (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <input
-                  type="text"
-                  placeholder="Generated stealth address"
-                  disabled={true}
-                  value={resolvedStealthAddressInfo?.stealthAddress}
-                  className="address-input"
-                />
+      {
+        isInRegistry && isValidInput && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="text"
+                placeholder="Generated stealth address"
+                disabled={true}
+                value={resolvedStealthAddressInfo?.stealthAddress}
+                className="address-input"
+              />
 
-                <div
-                  style={{ cursor: "pointer" }}
-                  onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}
-                >
-                  🔄
-                </div>
-
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}
+              >
+                🔄
               </div>
 
-              <button
-                type="submit"
-                className="mint-button"
-                onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
-                disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress || !isInRegistry}
-              >
-                {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
-              </button>
+            </div>
+
+            <button
+              type="submit"
+              className="mint-button"
+              onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
+              disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress || !isInRegistry}
+            >
+              {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
+            </button>
           </>
         )
       }

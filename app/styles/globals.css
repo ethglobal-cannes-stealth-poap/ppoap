@@ -585,6 +585,7 @@ body {
   transition: border-color 0.3s ease;
   box-sizing: border-box;
   color: black;
+  min-width: 270px;
 }
 
 .address-input:focus {
@@ -886,28 +887,56 @@ body {
   cursor: pointer;
 }
 
-.claim-page__all-good {
-  color: black;
-  font-size: 14px;
-  margin-bottom: 10px;
-  font-weight: 500;
+.mint-success {
+  margin: 30px 20px;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 16px;
+  color: #2c3e50;
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);
+  text-align: center;
 }
 
-.claim-page__not-registered {
-  color: black;
-  font-size: 14px;
-  margin-bottom: 10px;
-  font-weight: 500;
+.success-header {
+  text-align: center;
+  margin-bottom: 25px;
 }
 
-.claim-page__register-button {
-  background: #ff7f00;
-  color: white;
-  border: none;
+.success-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.success-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #4caf50;
+  margin-bottom: 8px;
+}
+
+.success-details {
+  background: rgba(76, 175, 80, 0.05);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  padding: 20px;
   border-radius: 12px;
   font-size: 14px;
-  font-weight: 500;
-  padding: 10px 20px;
-  margin-bottom: 10px;
-  cursor: pointer;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.success-details p {
+  margin: 8px 0;
+  word-break: break-all;
+}
+
+.success-details strong {
+  font-weight: 600;
+  color: #2c3e50;
+  display: inline-block;
+  min-width: 100px;
 }

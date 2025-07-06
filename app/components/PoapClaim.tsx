@@ -335,6 +335,7 @@ function PoapClaim({ poapId }: PoapClaimProps) {
           {
             startBroadcasting && (
               <PoapClaimBroadcast
+                hasMinted={!!mintResponse}
                 startAnnounce={() => announceStealthAddressMint(resolvedStealthAddressInfo?.stealthAddress as string, resolvedStealthAddressInfo?.ephemeralPublicKey as string, resolvedStealthAddressInfo?.viewTag as string)}
               />
             )

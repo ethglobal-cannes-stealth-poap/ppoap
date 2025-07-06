@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 
 export const PoapClaimBroadcast = ({
     startAnnounce,
+    hasMinted = false
 }: {
     startAnnounce: () => Promise<void>;
+    hasMinted?: boolean;
 }) => {
     const [isConnected, setIsConnected] = useState(false);
 
