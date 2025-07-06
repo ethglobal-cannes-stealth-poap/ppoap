@@ -1,0 +1,14 @@
+type Announcement @entity(immutable: true) {
+  id: Bytes!
+  schemeId: BigInt! # uint256
+  stealthAddress: Bytes! # address
+  caller: Bytes! # address
+  ephemeralPubKey: Bytes! # bytes
+  metadata: Bytes! # bytes
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+
+
