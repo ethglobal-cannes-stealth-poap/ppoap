@@ -39,7 +39,7 @@ export const PoapClaimFullForm = ({
             <>
               <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
 
-              <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}>Sound great</button>
+              {/* <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}>Sound great</button> */}
             </>
           )
         }
@@ -69,7 +69,7 @@ export const PoapClaimFullForm = ({
           type="submit"
           className="mint-button"
           onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
-          disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress}
+          disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress ||   !isInRegistry}
         >
           {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
         </button>

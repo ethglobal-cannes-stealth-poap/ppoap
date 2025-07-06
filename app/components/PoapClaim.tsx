@@ -133,6 +133,9 @@ function PoapClaim({
   }, [metaAddressInfo, stealthMetaAddress]);
 
   const isInRegistry = useMemo(() => {
+    if (resolvedStealthMetaAddress.includes("undefined")) {
+      return false;
+    }
     return !!resolvedStealthMetaAddress;
   }, [resolvedStealthMetaAddress]);
 
