@@ -1,9 +1,17 @@
+import Link from 'next/link';
+
 export default function Header() {
   return (
     <header className="header">
-      <div className="header-title">
+      <Link href="/" className="header-title">
         POAPrivacy
-      </div>
+      </Link>
+      <Link
+        href="/me"
+        className="header-nav-link"
+      >
+        My POAPs
+      </Link>
     </header>
   );
 }

@@ -126,6 +126,29 @@ body {
   background: rgba(0, 192, 229, 0.6);
 }
 
+.header-nav-link {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  color: #00c0e5;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
+.header-nav-link:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+  color: #0099b8;
+}
+
 .background-elements {
   position: absolute;
   top: 0;
