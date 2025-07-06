@@ -54,7 +54,7 @@ export const PoapClaimFullForm = ({
         {
           !isInRegistry && isValidInput && (
             <>
-              <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
+              <p className="claim-page__not-registered">Your meta-stealth address is not set up.</p>
 
             {!address ? (
               <button
@@ -82,6 +82,7 @@ export const PoapClaimFullForm = ({
                 <input
                   type="text"
                   placeholder="Generated stealth address"
+                  disabled={true}
                   value={resolvedStealthAddressInfo?.stealthAddress}
                   className="address-input"
                 />
