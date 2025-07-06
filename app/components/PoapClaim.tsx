@@ -131,7 +131,7 @@ function PoapClaim({ poapId }: PoapClaimProps) {
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
-  const isInRegistry = useMemo(() => {
+  const hasLongBoii = useMemo(() => {
     return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined;
   }, [resolvedStealthMetaAddress]);
 
@@ -148,7 +148,6 @@ function PoapClaim({ poapId }: PoapClaimProps) {
       functionName: "announce",
       args: [schemaId, stealthAddress, ephemeralPubKey, metadata],
     })
-    console.log("res", res);
   }
 
   const performMint = async (address: string) => {
