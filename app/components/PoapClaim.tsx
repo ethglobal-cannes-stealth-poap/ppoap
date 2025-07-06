@@ -108,12 +108,10 @@ function PoapClaim({ poapId }: PoapClaimProps) {
 
   const { mutate: setMetaAddy } = useMutation({
     mutationFn: async (stealthMetaAddress: string) => {
-      console.log("calling setMetaAddy");
       if (!stealthMetaAddress) {
         throw new Error("No stealth meta address provided");
       }
-      console.log("passed the if");
-      const res = await setMetaStealthAddress({ stealthMetaAddress });
+      await setMetaStealthAddress({ stealthMetaAddress });
     },
   });
 
@@ -123,13 +121,20 @@ function PoapClaim({ poapId }: PoapClaimProps) {
     if (metaAddressInfo?.stealthMetaAddress) {
       return metaAddressInfo.stealthMetaAddress;
     }
-    console.log("stealthMetaAddress", stealthMetaAddress)
+
+    if (!!stealthMetaAddress) {
+      return '0x'
+    }
+
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
+  console.log("resolvedStealthMetaAddress", resolvedStealthMetaAddress)
+
   const hasLongBoii = useMemo(() => {
-    return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined;
+    return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined && resolvedStealthMetaAddress !== 'st:eth:undefined';
   }, [resolvedStealthMetaAddress]);
+
 
   useEffect(() => {
     if (!hasLongBoii && !!resolvedStealthMetaAddress) {
