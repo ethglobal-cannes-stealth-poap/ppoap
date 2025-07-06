@@ -216,7 +216,7 @@ function PoapClaim({
     const mintToWallet = reciever;
 
     if (!mintToWallet?.trim()) {
-      alert("Please enter an ENS or Ethereum address");
+      toast.error("Please enter an ENS or Ethereum address");
       return;
     }
 
@@ -271,7 +271,7 @@ function PoapClaim({
       }
     } catch (error: any) {
       console.error("Error minting POAP:", error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setMinting(false);
     }

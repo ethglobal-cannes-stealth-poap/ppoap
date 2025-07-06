@@ -31,7 +31,6 @@ export default function Page() {
 
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
-      debugger
       console.log("Generating stealth address...");
       const data = await initializeStealthAddress()
 
