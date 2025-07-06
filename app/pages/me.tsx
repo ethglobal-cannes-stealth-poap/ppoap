@@ -43,24 +43,6 @@ const fetchPOAPsForAddress = async (address: string): Promise<POAP[]> => {
   return response.data;
 };
 
-// const addresses = [
-//   "0xDB1B7053d9b2989712d97AAE36602d8B9ff59760",
-//   "0xbc60d23a20e39658543ad4e6f95870f5353a1551",
-//   "0x5dcedda3385f448a1ebc62805ff250f8b41aa8c7",
-//   "0x5d56fadfb7559e606e6ccd1d007765d167407f53",
-//   "0x367ccd20bd663b202ce38de405c4257939a61166",
-//   "0x60ca9ec98f219c8542d2c820361233a619508599",
-//   "0x444ed899e93632c1a3611ad7c6f8a1b04dd05843",
-//   "0x8ad305877d25ec2f318066152cd8e78234948b37",
-//   "0x416d9d10cc8097a9ea568de9ee09672b735f4d72",
-//   "0xec418509235342f5a1e782386bebcfd30834cf42",
-//   "0x9ae765c9d6357b3d3b34b490c5a39a28d7a96aad",
-//   "0x4b73298000c9f1105be393cbb4197dc58b5d3172",
-//   "0xa91d405230bd93d873c98c9ed96285775ec1dc1a",
-//   "0x3d83d583fa575661202830323b881be02383b19f",
-//   "0xad47ab7def67d26acfb46584e98fd652b33b5060",
-// ];
-
 export default function Gallery() {
   const router = useRouter();
   const [longBoii, setLongBoii] = useState<string | null>(null);
@@ -147,18 +129,18 @@ export default function Gallery() {
             <div className="cloud cloud-5">☁️</div>
           </div>
 
-          <div className="main-content" style={{ marginTop: '120px', paddingBottom: '40px' }}>
-            <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>My POAP Gallery</h1>
+          <div className="main-content mt-[120px] pb-10">
+            <h1 className="text-center mt-12 mb-8 text-2xl font-semibold text-gray-800">My POAP Gallery</h1>
 
-            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <div className="text-center mb-8">
               <button
                 onClick={() => generateStealthAddy()}
                 className="connect-wallet-button"
                 disabled={isGeneratingStealthAddress}
               >
                 {isGeneratingStealthAddress ? (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <span className="loading-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', margin: '0' }}></span>
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="loading-spinner-small"></span>
                     Connecting...
                   </span>
                 ) : (
@@ -168,9 +150,38 @@ export default function Gallery() {
             </div>
 
             {longBoii && (
-              <div className="anon-address-display" style={{ marginBottom: '30px' }}>
+              <div className="anon-address-display mb-8">
                 <div className="anon-label">Connected Address</div>
                 <div className="anon-address">{longBoii}</div>
+              </div>
+            )}
+
+            {/* Empty state when not connected */}
+            {!longBoii && (
+              <div className="empty-state-card">
+                <div className="text-5xl mb-5">🔐</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  Connect Your Passkey
+                </h3>
+                <p className="text-gray-600 text-base leading-relaxed">
+                  Connect your passkey to view your private POAP collection and manage your addresses securely.
+                </p>
+              </div>
+            )}
+
+            {/* Empty state when connected but no addresses/POAPs */}
+            {longBoii && addressData && addressData.length === 0 && (
+              <div className="empty-state-card">
+                <div className="text-5xl mb-5">🎭</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  No POAPs Found
+                </h3>
+                <p className="text-gray-600 text-base leading-relaxed mb-5">
+                  You haven't added any addresses to your collection yet. Start by adding an address to view your POAPs.
+                </p>
+                <div className="empty-state-tip">
+                  💡 Tip: Add addresses from POAP events you've attended to build your collection
+                </div>
               </div>
             )}
 
@@ -178,25 +189,10 @@ export default function Gallery() {
               {addressData?.map((data, index) => (
                 <div
                   key={data.address}
-                  className="address-section"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    marginBottom: '20px',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid rgba(0, 192, 229, 0.2)'
-                  }}
+                  className="address-section-card"
                 >
                   <div
                     className="address-header"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '15px',
-                      cursor: 'pointer'
-                    }}
                     onClick={() => {
                       const section = document.getElementById(`address-${index}`);
                       if (section) {
@@ -204,119 +200,53 @@ export default function Gallery() {
                       }
                     }}
                   >
-                    <span style={{ fontFamily: 'monospace', fontSize: '16px', color: '#2c3e50', fontWeight: '600' }}>
+                    <span className="address-text">
                       {data?.address ? formatAddress(data?.address) : "-"}
                     </span>
-                    <div
-                      className="poap-count-badge"
-                      style={{
-                        background: 'rgba(0, 192, 229, 0.5)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(0, 192, 229, 0.5)',
-                        color: 'white',
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        boxShadow: '0 4px 16px rgba(0, 192, 229, 0.2)'
-                      }}
-                    >
+                    <div className="poap-count-badge">
                       {data.loading ? (
-                        <span className="loading-spinner" style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', margin: '0' }}></span>
+                        <span className="loading-spinner-small"></span>
                       ) : (
                         `${data.poaps.length} POAPs`
                       )}
                     </div>
                   </div>
 
-                  <div id={`address-${index}`} style={{ display: 'block' }}>
+                  <div id={`address-${index}`} className="block">
                     {data.loading && (
-                      <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                        <div className="loading-spinner" style={{ margin: '0 auto' }}></div>
+                      <div className="text-center py-10">
+                        <div className="loading-spinner mx-auto"></div>
                       </div>
                     )}
 
                     {data.error && (
-                      <div style={{
-                        background: '#ffebee',
-                        border: '1px solid #f44336',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        color: '#c62828',
-                        fontSize: '14px'
-                      }}>
+                      <div className="error-message">
                         {data.error}
                       </div>
                     )}
 
                     {!data.loading && !data.error && data.poaps.length > 0 && (
-                      <div className="poap-grid" style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                        gap: '16px',
-                        marginTop: '16px'
-                      }}>
+                      <div className="poap-grid">
                         {data.poaps.map((poap) => (
                           <div
                             key={poap.tokenId}
                             className="poap-card"
-                            style={{
-                              background: 'white',
-                              borderRadius: '12px',
-                              padding: '16px',
-                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                              cursor: 'pointer',
-                              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                              border: '1px solid rgba(0, 192, 229, 0.1)'
-                            }}
                             onClick={() => router.push(`/poap/${poap.tokenId}`)}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 192, 229, 0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-                            }}
                           >
-                            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                            <div className="text-center mb-3">
                               <img
                                 src={poap.event.image_url}
                                 alt={poap.event.name}
-                                style={{
-                                  width: '80px',
-                                  height: '80px',
-                                  borderRadius: '50%',
-                                  objectFit: 'cover',
-                                  border: '3px solid rgba(0, 192, 229, 0.3)'
-                                }}
+                                className="poap-card-image"
                               />
                             </div>
-                            <h3 style={{
-                              fontSize: '14px',
-                              fontWeight: '600',
-                              color: '#2c3e50',
-                              marginBottom: '8px',
-                              lineHeight: '1.3',
-                              textAlign: 'center'
-                            }}>
+                            <h3 className="poap-card-title">
                               {poap.event.name}
                             </h3>
-                            <div style={{
-                              fontSize: '12px',
-                              color: '#666',
-                              textAlign: 'center',
-                              marginBottom: '4px'
-                            }}>
+                            <div className="poap-card-date">
                               {new Date(poap.event.start_date).toLocaleDateString()}
                             </div>
-                            <div style={{
-                              fontSize: '12px',
-                              color: '#00c0e5',
-                              textAlign: 'center',
-                              fontWeight: '600'
-                            }}>
+                            <div className="poap-card-token">
                               #{poap.tokenId}
                             </div>
                           </div>
@@ -325,30 +255,20 @@ export default function Gallery() {
                     )}
 
                     {!data.loading && !data.error && data.poaps.length === 0 && (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '40px 0',
-                        color: '#666',
-                        fontSize: '14px'
-                      }}>
-                        No POAPs found for this address
+                      <div className="address-empty-state">
+                        <div className="text-3xl mb-3">🎫</div>
+                        <p className="text-gray-600 text-sm mb-2">
+                          No POAPs found for this address
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          This address may not have attended any POAP events yet
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-
-            {!longBoii && (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: '#666',
-                fontSize: '16px'
-              }}>
-                Connect your passkey to view your POAP collection
-              </div>
-            )}
           </div>
         </div>
       </div>

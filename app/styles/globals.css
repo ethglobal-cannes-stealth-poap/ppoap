@@ -714,103 +714,142 @@ body {
   margin-bottom: 20px;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0;
 }
 
-.error-container {
+.empty-state-card {
   text-align: center;
+  padding: 60px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  margin: 20px 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 192, 229, 0.2);
 }
 
-.error-icon {
-  font-size: 48px;
-  margin-bottom: 20px;
-}
-
-.error-container h2 {
-  color: #2c3e50;
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
-.error-container p {
-  color: #666;
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-.error-details {
-  color: #999;
+.empty-state-tip {
+  background: rgba(0, 192, 229, 0.1);
+  border-radius: 8px;
+  padding: 12px;
   font-size: 14px;
-  margin-top: 10px;
-}
-
-.how-to {
   color: #00c0e5;
-  font-size: 14px;
-  margin-top: 20px;
   font-weight: 500;
 }
 
-.mint-success {
-  margin: 30px 20px;
+.address-section-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  border-radius: 12px;
-  color: white;
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
-}
-
-.success-header {
-  text-align: center;
   margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 192, 229, 0.2);
 }
 
-.success-icon {
-  font-size: 32px;
-  margin-bottom: 10px;
+.address-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  cursor: pointer;
 }
 
-.success-header h3 {
-  margin: 0;
-  font-size: 20px;
+.address-text {
+  font-family: monospace;
+  font-size: 16px;
+  color: #2c3e50;
   font-weight: 600;
 }
 
-.success-details {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  border-radius: 8px;
+.poap-count-badge {
+  background: rgba(0, 192, 229, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 192, 229, 0.5);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 14px;
-  line-height: 1.6;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 192, 229, 0.2);
 }
 
-.success-details p {
-  margin: 5px 0;
+.error-message {
+  background: #ffebee;
+  border: 1px solid #f44336;
+  border-radius: 8px;
+  padding: 16px;
+  color: #c62828;
+  font-size: 14px;
 }
 
-.success-details strong {
+.poap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.poap-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 192, 229, 0.1);
+}
+
+.poap-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 192, 229, 0.2);
+}
+
+.poap-card-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(0, 192, 229, 0.3);
+}
+
+.poap-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.poap-card-date {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.poap-card-token {
+  font-size: 12px;
+  color: #00c0e5;
+  text-align: center;
   font-weight: 600;
 }
 
-.mint-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.address-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px dashed rgba(0, 192, 229, 0.3);
 }
 
-.badge-primary {
-  background: rgba(0, 192, 229, 0.5) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(0, 192, 229, 0.8) !important;
-  color: white !important;
-  box-shadow: 0 8px 32px rgba(0, 192, 229, 0.1) !important;
-}
 .claim-page__all-good {
   color: black;
   font-size: 14px;
