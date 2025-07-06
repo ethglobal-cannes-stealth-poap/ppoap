@@ -10,6 +10,9 @@ import { setMetaStealthAddress } from "../utils/writeTransactions/setMetaStealth
 import { StealthAddressInfo } from "../types";
 import { generateStealthAddress } from "../utils/stealth-address";
 import { getItem, getKey, setItem } from "../lib/userDb";
+import {useConnectWallet} from '@privy-io/react-auth';
+import { PoapClaimFullForm } from "./PoapClaimFullForm";
+import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
 
 const schemaId = 1;
 
@@ -46,6 +49,8 @@ function PoapClaim({
   const [ens, setEns] = useState("");
   const [mintResponse, setMintResponse] = useState<MintResponse | null>(null);
   const { writeContract } = useWriteContract()
+  const { connectWallet } = useConnectWallet();
+  const [startBroadcasting, setStartBroadcasting] = useState(false);
 
   const [resolvedStealthAddressInfo, setResolvedStealthAddressInfo] = useState<StealthAddressInfo | null>(null);
 
@@ -138,31 +143,74 @@ function PoapClaim({
   }, [isInRegistry, resolvedStealthMetaAddress, setMetaAddy]);
 
   const announceStealthAddressMint = async (stealthAddress: string, ephemeralPubKey: string, metadata: string) => {
-    await writeContract({
+    const res = await writeContract({
       abi: Contract5564,
       address: ANNOUNCE_CONTRACT_ADDRESS,
       functionName: "announce",
       args: [schemaId, stealthAddress, ephemeralPubKey, metadata],
     })
+
+    debugger
   }
 
   const performMint = async (address: string) => {
     try {
-      const response = await axios.post(
-        "/api/poap/mint",
-        {
-          poapId: poapId,
-          address: address,
-        },
-        {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // const response = await axios.post(
+      //   "/api/poap/mint",
+      //   {
+      //     poapId: poapId,
+      //     address: address,
+      //   },
+      //   {
+      //     headers: {
+      //       Accept: "application/json",
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
 
-      return response.data;
+      // return response.data;
+      return {
+          "id": 33832632,
+          "qr_hash": "6mc0mz",
+          "tx_hash": "",
+          "event_id": 191497,
+          "beneficiary": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
+          "user_input": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
+          "signer": "",
+          "claimed": true,
+          "claimed_date": "2025-07-06T02:05:05.986Z",
+          "created_date": "2025-07-06T02:05:05.962Z",
+          "is_active": true,
+          "event": {
+              "id": 191497,
+              "fancy_id": "ethcc-p-poap-2025",
+              "name": "EthCC P-POAP",
+              "description": "This is the first fully private POAP minted to the stealth address",
+              "location_type": "IN_PERSON",
+              "city": "Cannes",
+              "country": "France",
+              "channel": "",
+              "platform": "",
+              "event_url": "https://ethglobal.com",
+              "image_url": "https://assets.poap.xyz/e7eba34e-a527-42d8-ae23-1d6e163a6213.png",
+              "animation_url": "",
+              "year": 2025,
+              "start_date": "04-Jul-2025",
+              "end_date": "07-Jul-2025",
+              "expiry_date": "07-Jul-2026",
+              "timezone": "Europe/Paris",
+              "from_admin": false,
+              "virtual_event": false,
+              "event_template_id": null,
+              "private_event": false,
+              "minting_config": {
+                  "mint_animation_url": "https://s3.us-east-2.amazonaws.com/assets.poap.xyz/ethglobal_minting_animation_2025.riv"
+              }
+          },
+          "delegated_mint": false,
+          "delegated_signed_message": ""
+      }
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
       throw new Error(
@@ -179,9 +227,10 @@ function PoapClaim({
       }
 
       const response = await performMint(reciever);
-      if (response.status === "success") {
+      if (response.claimed) {
+        setStartBroadcasting(true);
         await announceStealthAddressMint(resolvedStealthAddressInfo.stealthAddress, resolvedStealthAddressInfo.ephemeralPublicKey, resolvedStealthAddressInfo.viewTag);
-        setMintResponse(response);
+        setMintResponse(response as unknown as MintResponse);
 
         if (!metaAddressInfo?.stealthMetaAddress) {
           console.error("Meta address info is not provided. Cannot store stealth address.");
@@ -293,62 +342,27 @@ function PoapClaim({
         </div>
 
         <div className="collect-section">
-          <div className="mint-form">
-            <input
-              type="text"
-              placeholder="ENS or Ethereum address"
-              value={ens}
-              onChange={(e) => setEns(e.target.value)}
-              className="address-input"
-            />
+          {
+            !startBroadcasting && (
+              <PoapClaimFullForm
+                ens={ens}
+                setEns={setEns}
+                isInRegistry={isInRegistry}
+                generateStealthAddressMutation={generateStealthAddressMutation}
+                resolvedStealthMetaAddress={resolvedStealthMetaAddress}
+                resolvedStealthAddressInfo={resolvedStealthAddressInfo}
+                mintPoapMutation={mintPoapMutation}
+              />
+            )
+          }
 
-
-            {isInRegistry ? <>
-              <p className="claim-page__all-good">
-                Your meta-stealth address is set up. You are all good to go!
-              </p>
-            </> : ' '}
-
-            {
-              !isInRegistry && (
-                <>
-                  <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
-
-                  <button className="mint-button claim-page__register-button" onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}>Sound great</button>
-                </>
-              )
-            }
-
-            {
-              isInRegistry && (
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <input
-                    type="text"
-                    placeholder="Generated stealth address"
-                    value={resolvedStealthAddressInfo?.stealthAddress}
-                    className="address-input"
-                  />
-
-                  <div
-                    style={{ cursor: "pointer" }}
-                    onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}
-                  >
-                    🔄
-                  </div>
-
-                </div>
-              )
-            }
-
-            <button
-              type="submit"
-              className="mint-button"
-              onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
-              disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress}
-            >
-              {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
-            </button>
-          </div>
+          {
+            startBroadcasting && (
+              <PoapClaimBroadcast
+                startAnnounce={() => announceStealthAddressMint(resolvedStealthAddressInfo?.stealthAddress as string, resolvedStealthAddressInfo?.ephemeralPublicKey as string, resolvedStealthAddressInfo?.viewTag as string)}
+              />
+            )
+          }
         </div>
       </div>
 
