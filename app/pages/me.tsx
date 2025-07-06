@@ -6,10 +6,9 @@ import { useRouter } from "next/router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
-import { generateStealthAddress } from "../utils/stealth-address";
 import { useState } from "react";
-import { getItem, getKey } from "../lib/userDb";
 import { cleanLongBoii } from "../utils/format";
+import { scanForStealthAssets } from "../utils/stealth-scanner";
 
 interface POAP {
   tokenId: string;
@@ -46,10 +45,16 @@ const fetchPOAPsForAddress = async (address: string): Promise<POAP[]> => {
 export default function Gallery() {
   const router = useRouter();
   const [longBoii, setLongBoii] = useState<string | null>(null);
+  const [viewingPrivateKey, setViewingPrivateKey] = useState<string | null>(null);
+  const [spendingPublicKey, setSpendingPublicKey] = useState<string | null>(null);
 
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
       const data = await initializeStealthAddress()
+
+      setViewingPrivateKey(data.viewingPrivateKey);
+      setSpendingPublicKey(data.spendingPublicKey);
+
       const rawLongBoii = data.stealthMetaAddress;
 
       // Slice to get the last 134 characters
@@ -58,15 +63,20 @@ export default function Gallery() {
     }
   });
 
-  const { data: addressData, isLoading } = useQuery({
+  const { data: addressData } = useQuery({
     queryKey: ['poaps', 'multiple-addresses', longBoii],
     queryFn: async () => {
-      if (!longBoii) {
+      if (!longBoii || !viewingPrivateKey || !spendingPublicKey) {
         return [];
       }
 
-      const key = getKey(longBoii);
-      const addresses = getItem<string[]>(key) || [];
+      const stealthAddresses = await scanForStealthAssets({
+        viewingPrivateKey: viewingPrivateKey as string,
+        spendingPublicKey: spendingPublicKey as string,
+      });
+
+      const addresses = stealthAddresses.filter((address) => address !== undefined) as string[];
+
       console.log("addresses", addresses);
 
       const results = await Promise.allSettled(

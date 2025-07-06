@@ -15,6 +15,7 @@ import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
 import { cleanLongBoii } from "../utils/format";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
+import { isAddress } from "viem";
 
 const schemaId = 1;
 
@@ -117,23 +118,21 @@ function PoapClaim({ poapId }: PoapClaimProps) {
       }
       console.log("passed the if");
       const res = await setMetaStealthAddress({ stealthMetaAddress });
-      console.log("Meta address set successfully:", res);
     },
   });
 
-  // look into logic ere
   const { data: stealthMetaAddress } = useReadMetaAddress({ address: ensAddress as string });
 
   const resolvedStealthMetaAddress = useMemo(() => {
     if (metaAddressInfo?.stealthMetaAddress) {
       return metaAddressInfo.stealthMetaAddress;
     }
-
+    console.log("stealthMetaAddress", stealthMetaAddress)
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
   const hasLongBoii = useMemo(() => {
-    return !!resolvedStealthMetaAddress && cleanLongBoii(resolvedStealthMetaAddress) !== longBoiEmpty;
+    return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined;
   }, [resolvedStealthMetaAddress]);
 
   useEffect(() => {
@@ -143,13 +142,12 @@ function PoapClaim({ poapId }: PoapClaimProps) {
   }, [hasLongBoii, resolvedStealthMetaAddress, setMetaAddy]);
 
   const announceStealthAddressMint = async (stealthAddress: string, ephemeralPubKey: string, metadata: string) => {
-    const res = await writeContract({
+    await writeContract({
       abi: Contract5564,
       address: ANNOUNCE_CONTRACT_ADDRESS,
       functionName: "announce",
       args: [schemaId, stealthAddress, ephemeralPubKey, metadata],
     })
-    console.log("res", res);
   }
 
   const performMint = async (address: string) => {

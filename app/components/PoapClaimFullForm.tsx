@@ -1,3 +1,6 @@
+import { useMemo } from "react";
+import { isAddress } from "viem";
+
 import { useConnectWallet, useWallets } from "@privy-io/react-auth";
 import { UseMutateFunction } from "@tanstack/react-query";
 
@@ -13,18 +16,23 @@ interface PoapClaimFullFormProps {
 }
 
 export const PoapClaimFullForm = ({
-  ens,
-  setEns,
-  isInRegistry,
-  generateStealthAddressMutation,
-  resolvedStealthMetaAddress,
-  resolvedStealthAddressInfo,
-  mintPoapMutation,
-  setUpPasskeys
+    ens,
+    setEns,
+    isInRegistry,
+    generateStealthAddressMutation,
+    resolvedStealthMetaAddress,
+    resolvedStealthAddressInfo,
+    mintPoapMutation,
+    setUpPasskeys,
 }: PoapClaimFullFormProps) => {
   const { connectWallet } = useConnectWallet();
   const { wallets } = useWallets();
   const address = wallets?.[0]?.address;
+
+
+  const isValidInput = useMemo(() => {
+      return isAddress(ens) || ens.endsWith('.eth');
+  }, [ens])
 
   return (
     <div className="mint-form">
@@ -37,16 +45,16 @@ export const PoapClaimFullForm = ({
       />
 
 
-      {isInRegistry ? <>
-        <p className="claim-page__all-good">
-          Your meta-stealth address is set up. You are all good to go!
-        </p>
-      </> : ' '}
+        {isInRegistry && isValidInput ? <>
+          <p className="claim-page__all-good">
+            Your meta-stealth address is set up. You are all good to go!
+          </p>
+        </> : ' '}
 
-      {
-        !isInRegistry && (
-          <>
-            <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
+        {
+          !isInRegistry && isValidInput && (
+            <>
+              <p className="claim-page__not-registered">Your meta-stealth address is not set up. Let's set it up</p>
 
             {!address ? (
               <button
@@ -67,34 +75,34 @@ export const PoapClaimFullForm = ({
         )
       }
 
-      {
-        isInRegistry && (
-          <>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <input
-                type="text"
-                placeholder="Generated stealth address"
-                value={resolvedStealthAddressInfo?.stealthAddress}
-                className="address-input"
-              />
+        {
+          isInRegistry && isValidInput && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <input
+                  type="text"
+                  placeholder="Generated stealth address"
+                  value={resolvedStealthAddressInfo?.stealthAddress}
+                  className="address-input"
+                />
 
-              <div
-                style={{ cursor: "pointer" }}
-                onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}
-              >
-                🔄
+                <div
+                  style={{ cursor: "pointer" }}
+                  onClick={() => generateStealthAddressMutation.mutate(resolvedStealthMetaAddress as string)}
+                >
+                  🔄
+                </div>
+
               </div>
 
-            </div>
-
-            <button
-              type="submit"
-              className="mint-button"
-              onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
-              disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress || !isInRegistry}
-            >
-              {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
-            </button>
+              <button
+                type="submit"
+                className="mint-button"
+                onClick={() => mintPoapMutation.mutate(resolvedStealthAddressInfo?.stealthAddress as string)}
+                disabled={mintPoapMutation.isPending || !resolvedStealthAddressInfo?.stealthAddress || !isInRegistry}
+              >
+                {mintPoapMutation.isPending ? "Minting..." : "Mint now"}
+              </button>
           </>
         )
       }
