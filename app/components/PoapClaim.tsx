@@ -154,62 +154,21 @@ function PoapClaim({ poapId }: PoapClaimProps) {
 
   const performMint = async (address: string) => {
     try {
-      // const response = await axios.post(
-      //   "/api/poap/mint",
-      //   {
-      //     poapId: poapId,
-      //     address: address,
-      //   },
-      //   {
-      //     headers: {
-      //       Accept: "application/json",
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
-
-      // return response.data;
-      return {
-        "id": 33832632,
-        "qr_hash": "6mc0mz",
-        "tx_hash": "",
-        "event_id": 191497,
-        "beneficiary": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
-        "user_input": "0xc906c81739c883612dadf0d21d387bdeb7c93d01",
-        "signer": "",
-        "claimed": true,
-        "claimed_date": "2025-07-06T02:05:05.986Z",
-        "created_date": "2025-07-06T02:05:05.962Z",
-        "is_active": true,
-        "event": {
-          "id": 191497,
-          "fancy_id": "ethcc-p-poap-2025",
-          "name": "EthCC P-POAP",
-          "description": "This is the first fully private POAP minted to the stealth address",
-          "location_type": "IN_PERSON",
-          "city": "Cannes",
-          "country": "France",
-          "channel": "",
-          "platform": "",
-          "event_url": "https://ethglobal.com",
-          "image_url": "https://assets.poap.xyz/e7eba34e-a527-42d8-ae23-1d6e163a6213.png",
-          "animation_url": "",
-          "year": 2025,
-          "start_date": "04-Jul-2025",
-          "end_date": "07-Jul-2025",
-          "expiry_date": "07-Jul-2026",
-          "timezone": "Europe/Paris",
-          "from_admin": false,
-          "virtual_event": false,
-          "event_template_id": null,
-          "private_event": false,
-          "minting_config": {
-            "mint_animation_url": "https://s3.us-east-2.amazonaws.com/assets.poap.xyz/ethglobal_minting_animation_2025.riv"
-          }
+      const response = await axios.post(
+        "/api/poap/mint",
+        {
+          poapId: poapId,
+          address: address,
         },
-        "delegated_mint": false,
-        "delegated_signed_message": ""
-      }
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
     } catch (err: any) {
       console.log("Mint API error:", err.response?.data || err.message);
       throw new Error(
