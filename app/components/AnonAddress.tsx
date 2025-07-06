@@ -32,7 +32,7 @@ function AnonAddress({ mintToAddress, setStealthAddressInfo }: AnonAddressProps)
       setStealthAddressInfo({
         stealthAddress: stealthAddress.stealthAddress,
         ephemeralPubKey: stealthAddress.ephemeralPublicKey,
-        metadata: stealthAddress.ViewTag,
+        metadata: stealthAddress.viewTag,
       });
       toast.success("Anon address generated successfully!");
     }
