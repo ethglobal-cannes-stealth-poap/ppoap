@@ -122,8 +122,9 @@ function PoapClaim({ poapId }: PoapClaimProps) {
       return metaAddressInfo.stealthMetaAddress;
     }
 
-    if (!!stealthMetaAddress) {
-      return '0x'
+    console.log("stealthMetaAddress", stealthMetaAddress)
+    if (!stealthMetaAddress) {
+      return undefined
     }
 
     return `st:eth:${stealthMetaAddress}`;
@@ -132,8 +133,10 @@ function PoapClaim({ poapId }: PoapClaimProps) {
   console.log("resolvedStealthMetaAddress", resolvedStealthMetaAddress)
 
   const hasLongBoii = useMemo(() => {
-    return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined && resolvedStealthMetaAddress !== 'st:eth:undefined';
+    return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined && resolvedStealthMetaAddress !== 'st:eth:0x';
   }, [resolvedStealthMetaAddress]);
+
+  console.log("has long boii", hasLongBoii)
 
 
   useEffect(() => {
