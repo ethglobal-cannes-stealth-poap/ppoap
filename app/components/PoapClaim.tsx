@@ -8,12 +8,11 @@ import { ANNOUNCE_CONTRACT_ADDRESS } from "../constants/contracts";
 import Contract5564 from "../constants/abi/5564.json"
 import { setMetaStealthAddress } from "../utils/writeTransactions/setMetaStealthAddress";
 import { StealthAddressInfo } from "../types";
-import { generateStealthAddress } from "../utils/stealth-address";
-import { getItem, getKey, setItem } from "../lib/userDb";
 import { PoapClaimFullForm } from "./PoapClaimFullForm";
 import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
+import { generateStealthAddress as generateStealthAddressSDK } from "@scopelift/stealth-address-sdk";
 
 const schemaId = 1;
 
@@ -130,13 +129,9 @@ function PoapClaim({ poapId }: PoapClaimProps) {
     return `st:eth:${stealthMetaAddress}`;
   }, [metaAddressInfo, stealthMetaAddress]);
 
-  console.log("resolvedStealthMetaAddress", resolvedStealthMetaAddress)
-
   const hasLongBoii = useMemo(() => {
     return resolvedStealthMetaAddress !== '0x' && resolvedStealthMetaAddress !== undefined && resolvedStealthMetaAddress !== 'st:eth:0x';
   }, [resolvedStealthMetaAddress]);
-
-  console.log("has long boii", hasLongBoii)
 
 
   useEffect(() => {
@@ -196,14 +191,6 @@ function PoapClaim({ poapId }: PoapClaimProps) {
           console.error("Meta address info is not provided. Cannot store stealth address.");
           return
         }
-
-        const key = getKey(metaAddressInfo?.stealthMetaAddress)
-        const addresses = getItem<string[]>(key) || [];
-        console.log("Current addresses in localStorage:", addresses);
-        setItem(key, [
-          ...addresses,
-          resolvedStealthAddressInfo.stealthAddress.toLowerCase(),
-        ]);
       }
     }
   })
@@ -213,7 +200,12 @@ function PoapClaim({ poapId }: PoapClaimProps) {
       const data = await initializeStealthAddress()
       setMetaAddressInfo(data)
 
-      const stealthAddressData = await generateStealthAddress(data.stealthMetaAddress)
+      // const stealthAddressData = await generateStealthAddress(data.stealthMetaAddress)
+      const stealthAddressData = await generateStealthAddressSDK({
+        stealthMetaAddressURI: data.stealthMetaAddress,
+      })
+
+      debugger
       setResolvedStealthAddressInfo(stealthAddressData)
 
       setMetaAddy(data.stealthMetaAddress);
@@ -229,7 +221,9 @@ function PoapClaim({ poapId }: PoapClaimProps) {
         throw new Error("No stealth meta address provided");
       }
 
-      const data = await generateStealthAddress(stealthMetaAddress)
+      const data = await generateStealthAddressSDK({
+        stealthMetaAddressURI: stealthMetaAddress,
+      })
       setResolvedStealthAddressInfo(data)
     },
   })

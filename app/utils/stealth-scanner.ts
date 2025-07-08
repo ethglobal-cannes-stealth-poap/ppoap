@@ -94,43 +94,18 @@ function parseStealthAddresses(
   return false;
 }
 
-// // const GRAPH_URL = 'https://gateway.thegraph.com/api/subgraphs/id/AVHQeKhBop1z4YFgx78hR6wsBJFcjRr2FrxHsKxqaN5Q';
-// const GRAPH_URL = 'https://api.studio.thegraph.com/query/115552/correct-contract/version/latest'
-// const client = createClient({
-//   url: GRAPH_URL,
-//   fetchOptions: {
-//     headers: {
+type StealthAddressData = {
+  stealthAddress: string;
+  ephemeralPubKey: string;
+  metadata: string;
+}
 
-//       Authorization: 'Bearer dda69902abbe4922d3c01f9278ca713d',
-
-//     },
-//   },
-//   exchanges: [cacheExchange, fetchExchange],
-// });
-
-// Main function to orchestrate the entire scan
 export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string, spendingPublicKey: string }) {
-
-
-  // const AnnouncementsQuery = `
-  //   query GetAnnouncements {
-  //     announcements(first: 5) {
-  //       id
-  //       schemeId
-  //       stealthAddress
-  //       ephemeralPubKey
-  //       metadata
-  //     }
-  //   }
-  // `;
-
-  // console.log("Fetching announcements from The Graph...");
-  // const result = await client.query(AnnouncementsQuery).toPromise();
-  // console.log("result:", result);
 
   const anouncementLogs = await getAnouncements();
 
   const stealthAddresses = [];
+  const stealhAddressData: StealthAddressData[] = [];
 
   for (const announcement of anouncementLogs) {
     const { stealthAddress, ephemeralPubKey, metadata } = announcement.args;
@@ -148,6 +123,11 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
 
       if (isForUser) {
         stealthAddresses.push(stealthAddress);
+        stealhAddressData.push({
+          stealthAddress,
+          ephemeralPubKey,
+          metadata,
+        });
       }
       console.log("isForUser:", isForUser);
     } catch (e) {
@@ -155,5 +135,8 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
     }
   }
 
-  return stealthAddresses;
+  return {
+    stealthAddresses,
+    stealhAddressData,
+  };
 }

@@ -9,6 +9,12 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { cleanLongBoii } from "../utils/format";
 import { scanForStealthAssets } from "../utils/stealth-scanner";
+import { computeStealthKey } from "@scopelift/stealth-address-sdk";
+import { privateKeyToAccount } from "viem/accounts";
+import { createWalletClient, erc721Abi, http } from "viem";
+import { gnosis } from "viem/chains";
+import { getAlchemyRpcUrl } from "../lib/wallet";
+import { useAccount } from "wagmi";
 
 interface POAP {
   tokenId: string;
@@ -47,6 +53,8 @@ export default function Gallery() {
   const [longBoii, setLongBoii] = useState<string | null>(null);
   const [viewingPrivateKey, setViewingPrivateKey] = useState<string | null>(null);
   const [spendingPublicKey, setSpendingPublicKey] = useState<string | null>(null);
+  const [spendingPrivateKey, setSpendingPrivateKey] = useState<string | null>(null);
+  const { address: connectedAccount } = useAccount()
 
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
@@ -54,6 +62,7 @@ export default function Gallery() {
 
       setViewingPrivateKey(data.viewingPrivateKey);
       setSpendingPublicKey(data.spendingPublicKey);
+      setSpendingPrivateKey(data.spendingPrivateKey);
 
       const rawLongBoii = data.stealthMetaAddress;
 
@@ -70,7 +79,7 @@ export default function Gallery() {
         return [];
       }
 
-      const stealthAddresses = await scanForStealthAssets({
+      const { stealthAddresses, stealhAddressData } = await scanForStealthAssets({
         viewingPrivateKey: viewingPrivateKey as string,
         spendingPublicKey: spendingPublicKey as string,
       });
@@ -80,13 +89,14 @@ export default function Gallery() {
       console.log("addresses", addresses);
 
       const results = await Promise.allSettled(
-        addresses.map(async (address) => {
+        addresses.map(async (address, i) => {
           try {
             const poaps = await fetchPOAPsForAddress(address);
 
             return {
               address,
               poaps,
+              stealthAddressData: stealhAddressData[i],
               loading: false,
               error: null,
             };
@@ -94,6 +104,7 @@ export default function Gallery() {
             return {
               address,
               poaps: [],
+              stealthAddressData: null,
               loading: false,
               error: "Failed to fetch POAPs",
             };
@@ -108,6 +119,7 @@ export default function Gallery() {
           return {
             address: addresses[index],
             poaps: [],
+            stealthAddressData: stealhAddressData[i],
             loading: false,
             error: "Failed to fetch POAPs",
           };
@@ -116,6 +128,41 @@ export default function Gallery() {
     },
     enabled: !!longBoii,
   });
+
+  const prepareAndTransfer = async (ephemeralPublicKey: string) => {
+    if (!spendingPrivateKey || !spendingPublicKey) {
+      return;
+    }
+
+    debugger
+
+    const stealthPrivateKey = computeStealthKey({
+      ephemeralPublicKey: ephemeralPublicKey as `0x${string}`,
+      schemeId: 1,
+      spendingPrivateKey: `0x${spendingPrivateKey}` as `0x${string}`,
+      viewingPrivateKey: `0x${viewingPrivateKey}` as `0x${string}`,
+    })
+
+    const stealthAddressAccount = privateKeyToAccount(stealthPrivateKey as `0x${string}`);
+    const stealthWalletClient = createWalletClient({
+      account: stealthAddressAccount,
+      chain: gnosis,
+      transport: http(getAlchemyRpcUrl(gnosis.id))
+    });
+
+    const hash = await stealthWalletClient.sendTransaction({
+      to: connectedAccount as `0x${string}`,
+      abi: erc721Abi,
+      functionName: "transferFrom",
+      args: [
+        connectedAccount as `0x${string}`,
+        connectedAccount as `0x${string}`,
+        "0x1",
+      ],
+    });
+
+
+  }
 
   return (
     <Layout>
@@ -244,6 +291,11 @@ export default function Gallery() {
                             onClick={() => router.push(`/poap/${poap.tokenId}`)}
                           >
                             <div className="text-center mb-3">
+                              {data.stealthAddressData && (
+                                <div className="poap-card-stealth-address">
+                                  {JSON.stringify(data.stealthAddressData)}
+                                </div>
+                              )}
                               <img
                                 src={poap.event.image_url}
                                 alt={poap.event.name}
@@ -259,6 +311,14 @@ export default function Gallery() {
                             <div className="poap-card-token">
                               #{poap.tokenId}
                             </div>
+
+                            <button onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string)
+                            }}>
+                              Mint POAP
+                            </button>
                           </div>
                         ))}
                       </div>

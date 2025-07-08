@@ -20,7 +20,7 @@ const alchemyMappings = {
   [base.id]: "base",
 }
 
-const getAlchemyRpcUrl = (chainId: number) => {
+export const getAlchemyRpcUrl = (chainId: number) => {
   const chain = alchemyMappings[chainId as keyof typeof alchemyMappings];
   if (!chain) {
     throw new Error(`No Alchemy RPC URL found for chain ID: ${chainId}`);
