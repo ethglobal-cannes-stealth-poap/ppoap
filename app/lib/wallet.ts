@@ -16,8 +16,8 @@ export const CHAIN_ID = 11155111;
 const alchemyMappings = {
   [sepolia.id]: "eth-sepolia",
   [mainnet.id]: "eth-mainnet",
-  [gnosis.id]: "gnosis",
-  [base.id]: "base",
+  [gnosis.id]: "gnosis-mainnet",
+  [base.id]: "base-mainnet",
 }
 
 export const getAlchemyRpcUrl = (chainId: number) => {

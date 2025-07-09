@@ -9,12 +9,12 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { cleanLongBoii } from "../utils/format";
 import { scanForStealthAssets } from "../utils/stealth-scanner";
-import { computeStealthKey } from "@scopelift/stealth-address-sdk";
 import { privateKeyToAccount } from "viem/accounts";
 import { createWalletClient, erc721Abi, http } from "viem";
 import { gnosis } from "viem/chains";
 import { getAlchemyRpcUrl } from "../lib/wallet";
 import { useAccount } from "wagmi";
+import { generateStealthPrivateKey } from "../utils/stealth-private-key";
 
 interface POAP {
   tokenId: string;
@@ -129,19 +129,22 @@ export default function Gallery() {
     enabled: !!longBoii,
   });
 
-  const prepareAndTransfer = async (ephemeralPublicKey: string) => {
+  const prepareAndTransfer = async (
+    ephemeralPublicKey: string, 
+    tokenId: string
+  ) => {
     if (!spendingPrivateKey || !spendingPublicKey) {
       return;
     }
 
     debugger
 
-    const stealthPrivateKey = computeStealthKey({
-      ephemeralPublicKey: ephemeralPublicKey as `0x${string}`,
-      schemeId: 1,
-      spendingPrivateKey: `0x${spendingPrivateKey}` as `0x${string}`,
-      viewingPrivateKey: `0x${viewingPrivateKey}` as `0x${string}`,
-    })
+
+    const stealthPrivateKey = generateStealthPrivateKey(
+      ephemeralPublicKey as string,
+      viewingPrivateKey as string,
+      spendingPrivateKey as string,
+    )
 
     const stealthAddressAccount = privateKeyToAccount(stealthPrivateKey as `0x${string}`);
     const stealthWalletClient = createWalletClient({
@@ -151,15 +154,17 @@ export default function Gallery() {
     });
 
     const hash = await stealthWalletClient.sendTransaction({
-      to: connectedAccount as `0x${string}`,
+      to: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
       abi: erc721Abi,
       functionName: "transferFrom",
       args: [
+        stealthAddressAccount.address as `0x${string}`,
         connectedAccount as `0x${string}`,
-        connectedAccount as `0x${string}`,
-        "0x1",
+        tokenId,
       ],
     });
+
+    console.log("hash", hash)
 
 
   }
@@ -315,7 +320,7 @@ export default function Gallery() {
                             <button onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
-                              prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string)
+                              prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string, poap.tokenId)
                             }}>
                               Mint POAP
                             </button>

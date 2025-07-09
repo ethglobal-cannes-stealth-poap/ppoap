@@ -34,8 +34,6 @@ function parseStealthAddresses(
   viewingPrivateKey: string,
   viewTag_given: string
 ){
-  console.log("ephemeralPublicKey_hex :",ephemeralPublicKey_hex);
-
   // Fix 1: Handle ephemeral public key properly
   // The ephemeralPublicKey might be missing compression prefix or be uncompressed
   let ephemeralPublicKey
@@ -56,21 +54,14 @@ function parseStealthAddresses(
       }
     }
   }
-  console.log('ephemeralPublicKey_hex:', ephemeralPublicKey_hex);
 
   const spendingPublicKey = secp.Point.fromHex(spendingPublicKey_hex.slice(2));
-  console.log('spendingPublicKey:', spendingPublicKey);
-
 
   const sharedSecret = secp.getSharedSecret(BigInt(`0x${viewingPrivateKey}`), ephemeralPublicKey);
-  console.log('sharedSecret:', sharedSecret);
 
   var hashedSharedSecret = keccak256(Buffer.from(sharedSecret.slice(1)));
-  // console.log("hashedSharedSecret2 :",hashedSharedSecret);
 
   var ViewTag = hashedSharedSecret.slice(2,4).toString();
-  // console.log('View tag:', ViewTag);
-  // console.log('View tag given:', viewTag_given);
   if (viewTag_given.replace("0x", "") != ViewTag) {
     console.log("skipped thanks to view tag;")
     return false;
@@ -80,14 +71,10 @@ function parseStealthAddresses(
   const hashedSharedSecretPoint = secp.Point.fromPrivateKey(
     Buffer.from(hashedSharedSecret.slice(2), "hex")
   );
-  // console.log('hashedSharedSecretPoint1:', hashedSharedSecretPoint);
 
   const stealthPublicKey = spendingPublicKey.add(hashedSharedSecretPoint);
-  // console.log("stealthPublicKey :",stealthPublicKey.toHex());
 
   const stealthAddress = toEthAddress(stealthPublicKey.toHex());
-  console.log(stealthAddress);
-  console.log(stealthAddress_given);
   if (stealthAddress.toLowerCase() === stealthAddress_given.toLowerCase()) {
     return [stealthAddress, ephemeralPublicKey_hex,  "0x" + hashedSharedSecret.toString()];
   }
