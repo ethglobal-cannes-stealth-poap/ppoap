@@ -12,7 +12,7 @@ import { PoapClaimFullForm } from "./PoapClaimFullForm";
 import { PoapClaimBroadcast } from "./PoapClaimBroadcast";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
-import { generateStealthAddress as generateStealthAddressSDK } from "@scopelift/stealth-address-sdk";
+import { generateStealthAddress } from "../utils/stealth-address";
 
 const schemaId = 1;
 
@@ -200,10 +200,10 @@ function PoapClaim({ poapId }: PoapClaimProps) {
       const data = await initializeStealthAddress()
       setMetaAddressInfo(data)
 
-      // const stealthAddressData = await generateStealthAddress(data.stealthMetaAddress)
-      const stealthAddressData = await generateStealthAddressSDK({
-        stealthMetaAddressURI: data.stealthMetaAddress,
-      })
+      const stealthAddressData = await generateStealthAddress(data.stealthMetaAddress)
+      // const stealthAddressData = await generateStealthAddressSDK({
+      //   stealthMetaAddressURI: data.stealthMetaAddress,
+      // })
 
       debugger
       setResolvedStealthAddressInfo(stealthAddressData)
@@ -221,9 +221,7 @@ function PoapClaim({ poapId }: PoapClaimProps) {
         throw new Error("No stealth meta address provided");
       }
 
-      const data = await generateStealthAddressSDK({
-        stealthMetaAddressURI: stealthMetaAddress,
-      })
+      const data = await generateStealthAddress(stealthMetaAddress)
       setResolvedStealthAddressInfo(data)
     },
   })

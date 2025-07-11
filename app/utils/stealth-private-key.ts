@@ -9,7 +9,6 @@ export const generateStealthPrivateKey = (
     spendingPrivateKey: string,
 ) => {
 
-    debugger
     // replaced bigint in the next arg with just hex string
     const sharedSecret = secp.getSharedSecret(BigInt(`0x${viewingPrivateKey}`), ephemeralPublicKey.replace('0x', ''));
 

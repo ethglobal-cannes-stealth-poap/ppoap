@@ -10,11 +10,14 @@ import { useState } from "react";
 import { cleanLongBoii } from "../utils/format";
 import { scanForStealthAssets } from "../utils/stealth-scanner";
 import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, erc721Abi, http } from "viem";
+import { createPublicClient, createWalletClient, getContract, http } from "viem";
 import { gnosis } from "viem/chains";
 import { getAlchemyRpcUrl } from "../lib/wallet";
 import { useAccount } from "wagmi";
 import { generateStealthPrivateKey } from "../utils/stealth-private-key";
+import { useSendTransaction } from '@privy-io/react-auth';
+import {useConnectWallet} from '@privy-io/react-auth';
+import POAP_CONTRACT_ABI from "../constants/abi/poap-contract.json";
 
 interface POAP {
   tokenId: string;
@@ -48,6 +51,11 @@ const fetchPOAPsForAddress = async (address: string): Promise<POAP[]> => {
   return response.data;
 };
 
+const publicClient = createPublicClient({
+  chain: gnosis,
+  transport: http(getAlchemyRpcUrl(gnosis.id))
+});
+
 export default function Gallery() {
   const router = useRouter();
   const [longBoii, setLongBoii] = useState<string | null>(null);
@@ -55,6 +63,9 @@ export default function Gallery() {
   const [spendingPublicKey, setSpendingPublicKey] = useState<string | null>(null);
   const [spendingPrivateKey, setSpendingPrivateKey] = useState<string | null>(null);
   const { address: connectedAccount } = useAccount()
+  const {sendTransaction} = useSendTransaction();
+  const { connectWallet, isConnected } = useConnectWallet();
+
 
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
@@ -85,8 +96,6 @@ export default function Gallery() {
       });
 
       const addresses = stealthAddresses.filter((address) => address !== undefined) as string[];
-
-      console.log("addresses", addresses);
 
       const results = await Promise.allSettled(
         addresses.map(async (address, i) => {
@@ -119,7 +128,7 @@ export default function Gallery() {
           return {
             address: addresses[index],
             poaps: [],
-            stealthAddressData: stealhAddressData[i],
+            stealthAddressData: stealhAddressData[index],
             loading: false,
             error: "Failed to fetch POAPs",
           };
@@ -137,9 +146,6 @@ export default function Gallery() {
       return;
     }
 
-    debugger
-
-
     const stealthPrivateKey = generateStealthPrivateKey(
       ephemeralPublicKey as string,
       viewingPrivateKey as string,
@@ -153,19 +159,54 @@ export default function Gallery() {
       transport: http(getAlchemyRpcUrl(gnosis.id))
     });
 
-    const hash = await stealthWalletClient.sendTransaction({
-      to: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
-      abi: erc721Abi,
+    const stealthAddressBalance = await publicClient.getBalance({
+      address: stealthAddressAccount.address as `0x${string}`,
+    })
+
+    const gasEstimate = await publicClient.estimateContractGas({
+      address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
+      abi: POAP_CONTRACT_ABI,
       functionName: "transferFrom",
       args: [
         stealthAddressAccount.address as `0x${string}`,
         connectedAccount as `0x${string}`,
-        tokenId,
+        BigInt(tokenId),
       ],
+      account: stealthAddressAccount,
     });
+    
+    const gasBufferMultiplier = 105n; // 5% buffer
+    const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
+    
+    if (stealthAddressBalance < gasEstimate) {
+      toast.error("Insufficient balance to cover gas fees");
+      sendTransaction({
+        to: stealthAddressAccount.address as `0x${string}`,
+        value: requiredGas - stealthAddressBalance,
+        chainId: gnosis.id,
+      }, {
+        address: connectedAccount as `0x${string}`,
+      });
 
-    console.log("hash", hash)
+    }
 
+    const contract = getContract({
+      address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
+      abi: POAP_CONTRACT_ABI,
+      client: {
+        public: publicClient,
+        wallet: stealthWalletClient,
+      }
+    })
+
+    // @ts-ignore
+    const tx = await contract.write.transferFrom([
+      stealthAddressAccount.address as `0x${string}`,
+      connectedAccount as `0x${string}`,
+      tokenId,
+    ])
+
+    debugger
 
   }
 
@@ -193,6 +234,23 @@ export default function Gallery() {
 
           <div className="main-content mt-[120px] pb-10">
             <h1 className="text-center mt-12 mb-8 text-2xl font-semibold text-gray-800">My POAP Gallery</h1>
+            
+            {isConnected && (
+              <div className="text-center mb-8">
+                <div className="text-center mb-8">
+                  <p>
+                    To claim POAPs, you need to connect your wallet.
+                  </p>
+
+                </div>
+                <button
+                  onClick={() => connectWallet()}
+                  className="connect-wallet-button"
+                >
+                  Connect Wallet
+                </button>
+              </div>
+            )}
 
             <div className="text-center mb-8">
               <button
