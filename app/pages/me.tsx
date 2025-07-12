@@ -197,7 +197,6 @@ export default function Gallery() {
     const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
     
     if (stealthAddressBalance < gasEstimate) {
-      toast.error("Insufficient balance to cover gas fees");
       const sendTx = await sendTransaction({
         to: stealthAddressAccount.address as `0x${string}`,
         value: requiredGas - stealthAddressBalance,
@@ -207,6 +206,7 @@ export default function Gallery() {
       });
 
       await publicClient.waitForTransactionReceipt(sendTx)
+      toast.success("Funded stealth address with gas fees ⛽️");
     }
 
       const contract = getContract({
@@ -422,7 +422,9 @@ export default function Gallery() {
                             
                             {
                               !mintedDrops?.includes(poap.event.id) && isConnected ? (
-                                <button onClick={(e) => {
+                                <button 
+                                className="mt-3 transfer-button"
+                                onClick={(e) => {
                                   e.preventDefault()
                                   e.stopPropagation()
                                   prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string, poap.tokenId)
