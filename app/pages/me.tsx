@@ -7,8 +7,17 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { initializeStealthAddress } from "../utils/pass-keys";
 import toast from "react-hot-toast";
 import { useState } from "react";
-import { cleanLongBoii } from "../utils/format";
+import { cleanLongBoii, copyToClipboard, truncateAddress } from "../utils/format";
 import { scanForStealthAssets } from "../utils/stealth-scanner";
+import { privateKeyToAccount } from "viem/accounts";
+import { createPublicClient, createWalletClient, getContract, http } from "viem";
+import { gnosis } from "viem/chains";
+import { getAlchemyRpcUrl } from "../lib/wallet";
+import { useAccount } from "wagmi";
+import { generateStealthPrivateKey } from "../utils/stealth-private-key";
+import { useSendTransaction, useWallets } from '@privy-io/react-auth';
+import { useConnectWallet } from '@privy-io/react-auth';
+import POAP_CONTRACT_ABI from "../constants/abi/poap-contract.json";
 
 interface POAP {
   tokenId: string;
@@ -42,11 +51,39 @@ const fetchPOAPsForAddress = async (address: string): Promise<POAP[]> => {
   return response.data;
 };
 
+const publicClient = createPublicClient({
+  chain: gnosis,
+  transport: http(getAlchemyRpcUrl(gnosis.id))
+});
+
 export default function Gallery() {
   const router = useRouter();
   const [longBoii, setLongBoii] = useState<string | null>(null);
   const [viewingPrivateKey, setViewingPrivateKey] = useState<string | null>(null);
   const [spendingPublicKey, setSpendingPublicKey] = useState<string | null>(null);
+  const [spendingPrivateKey, setSpendingPrivateKey] = useState<string | null>(null);
+  const { address: connectedAccount } = useAccount()
+  const { sendTransaction } = useSendTransaction();
+  const { connectWallet } = useConnectWallet();
+
+  const {wallets} = useWallets();
+
+  const isConnected = wallets.length > 0;
+
+  const { data: mintedDrops } = useQuery({
+    queryKey: ['poap', connectedAccount],
+    queryFn: async () => {
+      if (!connectedAccount) {
+        return [];
+      }
+
+      const poaps = await fetchPOAPsForAddress(connectedAccount);
+
+      return poaps.map((poap) => poap.event.id)
+    }
+  })
+  
+  console.log(mintedDrops)
 
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
@@ -54,6 +91,7 @@ export default function Gallery() {
 
       setViewingPrivateKey(data.viewingPrivateKey);
       setSpendingPublicKey(data.spendingPublicKey);
+      setSpendingPrivateKey(data.spendingPrivateKey);
 
       const rawLongBoii = data.stealthMetaAddress;
 
@@ -63,30 +101,29 @@ export default function Gallery() {
     }
   });
 
-  const { data: addressData } = useQuery({
+  const { data: addressData, isLoading } = useQuery({
     queryKey: ['poaps', 'multiple-addresses', longBoii],
     queryFn: async () => {
       if (!longBoii || !viewingPrivateKey || !spendingPublicKey) {
         return [];
       }
 
-      const stealthAddresses = await scanForStealthAssets({
+      const { stealthAddresses, stealhAddressData } = await scanForStealthAssets({
         viewingPrivateKey: viewingPrivateKey as string,
         spendingPublicKey: spendingPublicKey as string,
       });
 
       const addresses = stealthAddresses.filter((address) => address !== undefined) as string[];
 
-      console.log("addresses", addresses);
-
       const results = await Promise.allSettled(
-        addresses.map(async (address) => {
+        addresses.map(async (address, i) => {
           try {
             const poaps = await fetchPOAPsForAddress(address);
 
             return {
               address,
               poaps,
+              stealthAddressData: stealhAddressData[i],
               loading: false,
               error: null,
             };
@@ -94,6 +131,7 @@ export default function Gallery() {
             return {
               address,
               poaps: [],
+              stealthAddressData: null,
               loading: false,
               error: "Failed to fetch POAPs",
             };
@@ -108,6 +146,7 @@ export default function Gallery() {
           return {
             address: addresses[index],
             poaps: [],
+            stealthAddressData: stealhAddressData[index],
             loading: false,
             error: "Failed to fetch POAPs",
           };
@@ -116,6 +155,86 @@ export default function Gallery() {
     },
     enabled: !!longBoii,
   });
+
+  const prepareAndTransfer = async (
+    ephemeralPublicKey: string,
+    tokenId: string
+  ) => {
+    if (!spendingPrivateKey || !spendingPublicKey) {
+      return;
+    }
+
+    try {
+      const stealthPrivateKey = generateStealthPrivateKey(
+        ephemeralPublicKey as string,
+        viewingPrivateKey as string,
+        spendingPrivateKey as string,
+      )
+
+      const stealthAddressAccount = privateKeyToAccount(stealthPrivateKey as `0x${string}`);
+      const stealthWalletClient = createWalletClient({
+        account: stealthAddressAccount,
+        chain: gnosis,
+        transport: http(getAlchemyRpcUrl(gnosis.id))
+      });
+
+    const stealthAddressBalance = await publicClient.getBalance({
+      address: stealthAddressAccount.address as `0x${string}`,
+    })
+
+    const gasEstimate = await publicClient.estimateContractGas({
+      address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
+      abi: POAP_CONTRACT_ABI,
+      functionName: "transferFrom",
+      args: [
+        stealthAddressAccount.address as `0x${string}`,
+        connectedAccount as `0x${string}`,
+        BigInt(tokenId),
+      ],
+    });
+    
+    const gasBufferMultiplier = 105n; // 5% buffer
+    const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
+    
+    if (stealthAddressBalance < gasEstimate) {
+      const sendTx = await sendTransaction({
+        to: stealthAddressAccount.address as `0x${string}`,
+        value: requiredGas - stealthAddressBalance,
+        chainId: gnosis.id,
+      }, {
+        address: connectedAccount as `0x${string}`,
+      });
+
+      await publicClient.waitForTransactionReceipt(sendTx)
+      toast.success("Funded stealth address with gas fees ⛽️");
+    }
+
+      const contract = getContract({
+        address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
+        abi: POAP_CONTRACT_ABI,
+        client: {
+          public: publicClient,
+          wallet: stealthWalletClient,
+        }
+      })
+
+      if (!contract || !contract?.write) {
+        toast.error("Failed to get contract instance");
+        return;
+      }
+
+      // @ts-ignore
+      await contract.write.transferFrom([
+        stealthAddressAccount.address as `0x${string}`,
+        connectedAccount as `0x${string}`,
+        tokenId,
+      ])
+    } catch (error) {
+      console.error("Transfer failed:", error);
+      toast.error("Transfer failed. Please try again.");
+      return;
+    }
+  }
 
   return (
     <Layout>
@@ -141,28 +260,48 @@ export default function Gallery() {
 
           <div className="main-content mt-[120px] pb-10">
             <h1 className="text-center mt-12 mb-8 text-2xl font-semibold text-gray-800">My POAP Gallery</h1>
+            
+            {!isConnected && (
+              <div className="text-center mb-8">
+                <div className="text-center mb-8">
+                  <p>
+                    To claim POAPs, you need to connect your wallet.
+                  </p>
 
-            <div className="text-center mb-8">
-              <button
-                onClick={() => generateStealthAddy()}
-                className="connect-wallet-button"
-                disabled={isGeneratingStealthAddress}
-              >
-                {isGeneratingStealthAddress ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="loading-spinner-small"></span>
-                    Connecting...
-                  </span>
-                ) : (
-                  'Connect Passkey'
-                )}
-              </button>
-            </div>
+                </div>
+                <button
+                  onClick={() => connectWallet()}
+                  className="connect-wallet-button"
+                >
+                  Connect Wallet
+                </button>
+              </div>
+            )}
+            {
+              !longBoii && (
+                <div className="text-center mb-8">
+                  <button
+                    onClick={() => generateStealthAddy()}
+                    className="connect-wallet-button"
+                    disabled={isGeneratingStealthAddress}
+                  >
+                    {isGeneratingStealthAddress ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="loading-spinner-small"></span>
+                        Connecting...
+                      </span>
+                    ) : (
+                      'Connect Passkey'
+                    )}
+                  </button>
+                </div>
+              )
+            }
 
             {longBoii && (
               <div className="anon-address-display mb-8">
-                <div className="anon-label">Connected Address</div>
-                <div className="anon-address">{longBoii}</div>
+                <div className="anon-label">Connected Stealth Meta Address</div>
+                <div className="anon-address">st:eth:{longBoii}</div>
               </div>
             )}
 
@@ -196,6 +335,27 @@ export default function Gallery() {
             )}
 
             <div className="poap-gallery">
+              {/* Loading state with skeleton cards */}
+              {isLoading && (
+                <div className="address-section-card">
+                  <div className="address-header">
+                    <div className="skeleton skeleton-text w-32 h-5"></div>
+                    <div className="skeleton skeleton-badge w-20 h-8"></div>
+                  </div>
+                  <div className="poap-grid">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="poap-card-skeleton">
+                        <div className="skeleton skeleton-image"></div>
+                        <div className="skeleton skeleton-text w-full h-4 mt-3"></div>
+                        <div className="skeleton skeleton-text w-3/4 h-3 mt-2"></div>
+                        <div className="skeleton skeleton-text w-1/2 h-3 mt-1"></div>
+                        <div className="skeleton skeleton-button w-full h-10 mt-3"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {addressData?.filter((data) => data.poaps.length > 0)?.map((data, index) => (
                 <div
                   key={data.address}
@@ -259,6 +419,32 @@ export default function Gallery() {
                             <div className="poap-card-token">
                               #{poap.tokenId}
                             </div>
+                            
+                            {
+                              !mintedDrops?.includes(poap.event.id) && isConnected ? (
+                                <button 
+                                className="mt-3 transfer-button"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string, poap.tokenId)
+                                }}>
+                                  Mint POAP
+                                </button>
+                              ) : (
+                                <div>
+                                  {isConnected ? (
+                                    <div>
+                                      This poap was already minted for your wallet.
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      Connect your wallet to mint this POAP.
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            }
                           </div>
                         ))}
                       </div>

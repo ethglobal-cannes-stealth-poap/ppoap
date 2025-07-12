@@ -34,8 +34,6 @@ function parseStealthAddresses(
   viewingPrivateKey: string,
   viewTag_given: string
 ){
-  console.log("ephemeralPublicKey_hex :",ephemeralPublicKey_hex);
-
   // Fix 1: Handle ephemeral public key properly
   // The ephemeralPublicKey might be missing compression prefix or be uncompressed
   let ephemeralPublicKey
@@ -56,21 +54,14 @@ function parseStealthAddresses(
       }
     }
   }
-  console.log('ephemeralPublicKey_hex:', ephemeralPublicKey_hex);
 
   const spendingPublicKey = secp.Point.fromHex(spendingPublicKey_hex.slice(2));
-  console.log('spendingPublicKey:', spendingPublicKey);
-
 
   const sharedSecret = secp.getSharedSecret(BigInt(`0x${viewingPrivateKey}`), ephemeralPublicKey);
-  console.log('sharedSecret:', sharedSecret);
 
   var hashedSharedSecret = keccak256(Buffer.from(sharedSecret.slice(1)));
-  // console.log("hashedSharedSecret2 :",hashedSharedSecret);
 
   var ViewTag = hashedSharedSecret.slice(2,4).toString();
-  // console.log('View tag:', ViewTag);
-  // console.log('View tag given:', viewTag_given);
   if (viewTag_given.replace("0x", "") != ViewTag) {
     console.log("skipped thanks to view tag;")
     return false;
@@ -80,57 +71,28 @@ function parseStealthAddresses(
   const hashedSharedSecretPoint = secp.Point.fromPrivateKey(
     Buffer.from(hashedSharedSecret.slice(2), "hex")
   );
-  // console.log('hashedSharedSecretPoint1:', hashedSharedSecretPoint);
 
   const stealthPublicKey = spendingPublicKey.add(hashedSharedSecretPoint);
-  // console.log("stealthPublicKey :",stealthPublicKey.toHex());
 
   const stealthAddress = toEthAddress(stealthPublicKey.toHex());
-  console.log(stealthAddress);
-  console.log(stealthAddress_given);
   if (stealthAddress.toLowerCase() === stealthAddress_given.toLowerCase()) {
     return [stealthAddress, ephemeralPublicKey_hex,  "0x" + hashedSharedSecret.toString()];
   }
   return false;
 }
 
-// // const GRAPH_URL = 'https://gateway.thegraph.com/api/subgraphs/id/AVHQeKhBop1z4YFgx78hR6wsBJFcjRr2FrxHsKxqaN5Q';
-// const GRAPH_URL = 'https://api.studio.thegraph.com/query/115552/correct-contract/version/latest'
-// const client = createClient({
-//   url: GRAPH_URL,
-//   fetchOptions: {
-//     headers: {
+type StealthAddressData = {
+  stealthAddress: string;
+  ephemeralPubKey: string;
+  metadata: string;
+}
 
-//       Authorization: 'Bearer dda69902abbe4922d3c01f9278ca713d',
-
-//     },
-//   },
-//   exchanges: [cacheExchange, fetchExchange],
-// });
-
-// Main function to orchestrate the entire scan
 export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string, spendingPublicKey: string }) {
-
-
-  // const AnnouncementsQuery = `
-  //   query GetAnnouncements {
-  //     announcements(first: 5) {
-  //       id
-  //       schemeId
-  //       stealthAddress
-  //       ephemeralPubKey
-  //       metadata
-  //     }
-  //   }
-  // `;
-
-  // console.log("Fetching announcements from The Graph...");
-  // const result = await client.query(AnnouncementsQuery).toPromise();
-  // console.log("result:", result);
 
   const anouncementLogs = await getAnouncements();
 
   const stealthAddresses = [];
+  const stealhAddressData: StealthAddressData[] = [];
 
   for (const announcement of anouncementLogs) {
     const { stealthAddress, ephemeralPubKey, metadata } = announcement.args;
@@ -148,6 +110,11 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
 
       if (isForUser) {
         stealthAddresses.push(stealthAddress);
+        stealhAddressData.push({
+          stealthAddress,
+          ephemeralPubKey,
+          metadata,
+        });
       }
       console.log("isForUser:", isForUser);
     } catch (e) {
@@ -155,5 +122,8 @@ export async function scanForStealthAssets(userKeys: { viewingPrivateKey: string
     }
   }
 
-  return stealthAddresses;
+  return {
+    stealthAddresses,
+    stealhAddressData,
+  };
 }

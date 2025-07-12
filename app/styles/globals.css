@@ -126,6 +126,29 @@ body {
   background: rgba(0, 192, 229, 0.6);
 }
 
+.transfer-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 192, 229, 0.5);
+  color: #00c0e5;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 192, 229, 0.1);
+}
+
+.transfer-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 192, 229, 0.2);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 192, 229, 0.8);
+  color: #0099b8;
+}
+
 .header-nav-link {
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.9);
@@ -446,7 +469,6 @@ body {
   margin-top: 8px;
   letter-spacing: 1px;
   text-align: center;
-  transform: rotate(1deg);
 }
 
 .attendance-count {
@@ -474,8 +496,9 @@ body {
   position: relative;
   z-index: 2;
   max-width: 370px;
+  min-width: 300px; 
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 0px;
 }
 
 .main-content h1 {
@@ -557,12 +580,6 @@ body {
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-}
-
-.anon-label {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
 }
 
 .anon-address {
@@ -737,9 +754,10 @@ body {
 
 .empty-state-card {
   text-align: center;
-  padding: 60px 20px;
+  padding: 30px 20px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 16px;
+  max-width: 300px;
   margin: 20px 0;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(0, 192, 229, 0.2);
@@ -767,7 +785,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
   cursor: pointer;
 }
 
@@ -828,6 +845,8 @@ body {
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid rgba(0, 192, 229, 0.3);
+  margin: 0 auto;
+  margin-bottom: 15px;
 }
 
 .poap-card-title {
@@ -940,3 +959,88 @@ body {
   display: inline-block;
   min-width: 100px;
 }
+
+.anon-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.connected-address-display {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 192, 229, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 192, 229, 0.1);
+  position: relative;
+}
+
+.connected-address-display:hover {
+  box-shadow: 0 6px 20px rgba(0, 192, 229, 0.15);
+  border-color: rgba(0, 192, 229, 0.5);
+}
+
+.copy-indicator {
+  font-size: 16px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  margin-left: 10px;
+}
+
+.connected-address-display:hover .copy-indicator {
+  opacity: 1;
+}
+
+/* Skeleton loading styles */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-badge {
+  border-radius: 20px;
+}
+
+.skeleton-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.skeleton-button {
+  border-radius: 12px;
+}
+
+.poap-card-skeleton {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 192, 229, 0.1);
+  text-align: center;
+}
+

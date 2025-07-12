@@ -16,11 +16,11 @@ export const CHAIN_ID = 11155111;
 const alchemyMappings = {
   [sepolia.id]: "eth-sepolia",
   [mainnet.id]: "eth-mainnet",
-  [gnosis.id]: "gnosis",
-  [base.id]: "base",
+  [gnosis.id]: "gnosis-mainnet",
+  [base.id]: "base-mainnet",
 }
 
-const getAlchemyRpcUrl = (chainId: number) => {
+export const getAlchemyRpcUrl = (chainId: number) => {
   const chain = alchemyMappings[chainId as keyof typeof alchemyMappings];
   if (!chain) {
     throw new Error(`No Alchemy RPC URL found for chain ID: ${chainId}`);

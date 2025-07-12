@@ -14,7 +14,6 @@ export const generateStealthAddress = async (stealthMetaAddress: string) => {
   }
 
   const R_pubkey_spend = secp.Point.fromHex(USER.slice(9,75));
-  //console.log('R_pubkey_spend:', R_pubkey_spend);
 
   const R_pubkey_view = secp.Point.fromHex(USER.slice(75,));
 
