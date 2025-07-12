@@ -845,6 +845,8 @@ body {
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid rgba(0, 192, 229, 0.3);
+  margin: 0 auto;
+  margin-bottom: 15px;
 }
 
 .poap-card-title {

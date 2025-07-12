@@ -15,7 +15,7 @@ import { gnosis } from "viem/chains";
 import { getAlchemyRpcUrl } from "../lib/wallet";
 import { useAccount } from "wagmi";
 import { generateStealthPrivateKey } from "../utils/stealth-private-key";
-import { useSendTransaction } from '@privy-io/react-auth';
+import { useSendTransaction, useWallets } from '@privy-io/react-auth';
 import { useConnectWallet } from '@privy-io/react-auth';
 import POAP_CONTRACT_ABI from "../constants/abi/poap-contract.json";
 
@@ -64,9 +64,26 @@ export default function Gallery() {
   const [spendingPrivateKey, setSpendingPrivateKey] = useState<string | null>(null);
   const { address: connectedAccount } = useAccount()
   const { sendTransaction } = useSendTransaction();
-  // @ts-ignore
-  const { connectWallet, isConnected } = useConnectWallet();
+  const { connectWallet } = useConnectWallet();
 
+  const {wallets} = useWallets();
+
+  const isConnected = wallets.length > 0;
+
+  const { data: mintedDrops } = useQuery({
+    queryKey: ['poap', connectedAccount],
+    queryFn: async () => {
+      if (!connectedAccount) {
+        return [];
+      }
+
+      const poaps = await fetchPOAPsForAddress(connectedAccount);
+
+      return poaps.map((poap) => poap.event.id)
+    }
+  })
+  
+  console.log(mintedDrops)
 
   const { mutate: generateStealthAddy, isPending: isGeneratingStealthAddress } = useMutation({
     mutationFn: async () => {
@@ -161,36 +178,36 @@ export default function Gallery() {
         transport: http(getAlchemyRpcUrl(gnosis.id))
       });
 
-      const stealthAddressBalance = await publicClient.getBalance({
-        address: stealthAddressAccount.address as `0x${string}`,
-      })
+    const stealthAddressBalance = await publicClient.getBalance({
+      address: stealthAddressAccount.address as `0x${string}`,
+    })
 
-      const gasEstimate = await publicClient.estimateContractGas({
-        address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
-        abi: POAP_CONTRACT_ABI,
-        functionName: "transferFrom",
-        args: [
-          stealthAddressAccount.address as `0x${string}`,
-          connectedAccount as `0x${string}`,
-          BigInt(tokenId),
-        ],
-        account: stealthAddressAccount,
+    const gasEstimate = await publicClient.estimateContractGas({
+      address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
+      abi: POAP_CONTRACT_ABI,
+      functionName: "transferFrom",
+      args: [
+        stealthAddressAccount.address as `0x${string}`,
+        connectedAccount as `0x${string}`,
+        BigInt(tokenId),
+      ],
+    });
+    
+    const gasBufferMultiplier = 105n; // 5% buffer
+    const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
+    
+    if (stealthAddressBalance < gasEstimate) {
+      toast.error("Insufficient balance to cover gas fees");
+      const sendTx = await sendTransaction({
+        to: stealthAddressAccount.address as `0x${string}`,
+        value: requiredGas - stealthAddressBalance,
+        chainId: gnosis.id,
+      }, {
+        address: connectedAccount as `0x${string}`,
       });
 
-      const gasBufferMultiplier = 105n; // 5% buffer
-      const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
-
-      if (stealthAddressBalance < gasEstimate) {
-        toast.error("Insufficient balance to cover gas fees");
-        sendTransaction({
-          to: stealthAddressAccount.address as `0x${string}`,
-          value: requiredGas - stealthAddressBalance,
-          chainId: gnosis.id,
-        }, {
-          address: connectedAccount as `0x${string}`,
-        });
-
-      }
+      await publicClient.waitForTransactionReceipt(sendTx)
+    }
 
       const contract = getContract({
         address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
@@ -243,8 +260,8 @@ export default function Gallery() {
 
           <div className="main-content mt-[120px] pb-10">
             <h1 className="text-center mt-12 mb-8 text-2xl font-semibold text-gray-800">My POAP Gallery</h1>
-
-            {isConnected && (
+            
+            {!isConnected && (
               <div className="text-center mb-8">
                 <div className="text-center mb-8">
                   <p>
@@ -260,35 +277,31 @@ export default function Gallery() {
                 </button>
               </div>
             )}
-
-            {!longBoii && <div className="text-center mb-8">
-              <button
-                onClick={() => generateStealthAddy()}
-                className="connect-wallet-button"
-                disabled={isGeneratingStealthAddress}
-              >
-                {isGeneratingStealthAddress ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="loading-spinner-small"></span>
-                    Connecting...
-                  </span>
-                ) : (
-                  'Connect Passkey'
-                )}
-              </button>
-            </div>}
+            {
+              !longBoii && (
+                <div className="text-center mb-8">
+                  <button
+                    onClick={() => generateStealthAddy()}
+                    className="connect-wallet-button"
+                    disabled={isGeneratingStealthAddress}
+                  >
+                    {isGeneratingStealthAddress ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="loading-spinner-small"></span>
+                        Connecting...
+                      </span>
+                    ) : (
+                      'Connect Passkey'
+                    )}
+                  </button>
+                </div>
+              )
+            }
 
             {longBoii && (
-              <div
-                className="connected-address-display cursor-pointer hover:bg-opacity-100 transition-all duration-200 flex justify-between"
-                onClick={() => copyToClipboard(longBoii)}
-                title="Click to copy address"
-              >
-                <div className="connected-address-label">Connected:</div>
-                <div className="flex">
-                  <div className="connected-address-value">{truncateAddress(longBoii)}</div>
-                  <div className="copy-indicator">📋</div>
-                </div>
+              <div className="anon-address-display mb-8">
+                <div className="anon-label">Connected Stealth Meta Address</div>
+                <div className="anon-address">st:eth:{longBoii}</div>
               </div>
             )}
 
@@ -390,7 +403,7 @@ export default function Gallery() {
                             className="poap-card"
                             onClick={() => router.push(`/poap/${poap.tokenId}`)}
                           >
-                            <div className="text-center mb-3 w-full flex justify-center">
+                            <div className="text-center mb-3">
                               <img
                                 src={poap.event.image_url}
                                 alt={poap.event.name}
@@ -406,16 +419,30 @@ export default function Gallery() {
                             <div className="poap-card-token">
                               #{poap.tokenId}
                             </div>
-
-                            <button
-                              className="mt-3 transfer-button"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string, poap.tokenId)
-                              }}>
-                              Transfer POAP
-                            </button>
+                            
+                            {
+                              !mintedDrops?.includes(poap.event.id) && isConnected ? (
+                                <button onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  prepareAndTransfer(data.stealthAddressData?.ephemeralPubKey as string, poap.tokenId)
+                                }}>
+                                  Mint POAP
+                                </button>
+                              ) : (
+                                <div>
+                                  {isConnected ? (
+                                    <div>
+                                      This poap was already minted for your wallet.
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      Connect your wallet to mint this POAP.
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            }
                           </div>
                         ))}
                       </div>
