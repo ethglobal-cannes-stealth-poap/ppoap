@@ -18,6 +18,9 @@ import { generateStealthPrivateKey } from "../utils/stealth-private-key";
 import { useSendTransaction, useWallets } from '@privy-io/react-auth';
 import { useConnectWallet } from '@privy-io/react-auth';
 import POAP_CONTRACT_ABI from "../constants/abi/poap-contract.json";
+import { useSwitchChain } from "wagmi";
+
+
 
 interface POAP {
   tokenId: string;
@@ -66,7 +69,10 @@ export default function Gallery() {
   const { sendTransaction } = useSendTransaction();
   const { connectWallet } = useConnectWallet();
 
+  const { switchChain, chains, switchChainAsync } = useSwitchChain();
+  
   const {wallets} = useWallets();
+  const wallet = wallets?.[0];
 
   const isConnected = wallets.length > 0;
 
@@ -197,10 +203,14 @@ export default function Gallery() {
     const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
     
     if (stealthAddressBalance < gasEstimate) {
+      console.log(chains)
+      await switchChainAsync({
+        chainId: gnosis.id,
+      })
+      debugger
       const sendTx = await sendTransaction({
         to: stealthAddressAccount.address as `0x${string}`,
         value: requiredGas - stealthAddressBalance,
-        chainId: gnosis.id,
       }, {
         address: connectedAccount as `0x${string}`,
       });

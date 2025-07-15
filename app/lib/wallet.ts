@@ -1,8 +1,7 @@
 import { createConfig } from "@privy-io/wagmi";
 import { base, gnosis, mainnet, sepolia } from "wagmi/chains";
 import { Abi, http } from "viem";
-import { createPublicClient, createWalletClient, custom } from "viem";
-import { ConnectedWallet } from "@privy-io/react-auth";
+import { createPublicClient } from "viem";
 
 const ALCHEMY_RPC_KEY = process.env.NEXT_PUBLIC_ALCHEMY_RPC_KEY;
 if (!ALCHEMY_RPC_KEY) {
@@ -45,20 +44,6 @@ export const getViemClient = () => {
     batch: {
       multicall: !!sepolia.contracts?.multicall3?.address,
     },
-  });
-
-  return client;
-};
-
-export const getWalletClient = async (wallet: ConnectedWallet) => {
-  if (!wallet) {
-    throw new Error("Wallet is not connected");
-  }
-  const provider = await wallet.getEthereumProvider();
-  const client = createWalletClient({
-    account: wallet.address as `0x${string}`,
-    chain: mainnet,
-    transport: custom(provider),
   });
 
   return client;

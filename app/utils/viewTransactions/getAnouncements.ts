@@ -1,4 +1,4 @@
-import { http, parseAbiItem } from "viem";
+import { http } from "viem";
 import { createPublicClient } from "viem";
 import { sepolia } from "viem/chains";
 import { ANNOUNCE_CONTRACT_ADDRESS } from "../../constants/contracts";
