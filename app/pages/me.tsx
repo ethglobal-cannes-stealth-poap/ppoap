@@ -188,6 +188,8 @@ export default function Gallery() {
       address: stealthAddressAccount.address as `0x${string}`,
     })
 
+    const gasPrice = await publicClient.getGasPrice();
+
     const gasEstimate = await publicClient.estimateContractGas({
       address: "0x22c1f6050e56d2876009903609a2cc3fef83b415" as `0x${string}`,
       abi: POAP_CONTRACT_ABI,
@@ -198,19 +200,20 @@ export default function Gallery() {
         BigInt(tokenId),
       ],
     });
-    
+
     const gasBufferMultiplier = 105n; // 5% buffer
     const requiredGas = (gasEstimate * gasBufferMultiplier) / 100n;
+
+    const totalGasCost = requiredGas * gasPrice;
     
-    if (stealthAddressBalance < gasEstimate) {
+    if (stealthAddressBalance < totalGasCost) {
       console.log(chains)
       await switchChainAsync({
         chainId: gnosis.id,
       })
-      debugger
       const sendTx = await sendTransaction({
         to: stealthAddressAccount.address as `0x${string}`,
-        value: requiredGas - stealthAddressBalance,
+        value: totalGasCost - stealthAddressBalance,
       }, {
         address: connectedAccount as `0x${string}`,
       });
@@ -239,6 +242,7 @@ export default function Gallery() {
         connectedAccount as `0x${string}`,
         tokenId,
       ])
+      toast.success("POAP transferred successfully!");
     } catch (error) {
       console.error("Transfer failed:", error);
       toast.error("Transfer failed. Please try again.");
